@@ -5,6 +5,8 @@ from node_handlers.combat_handler import handle as handle_combat
 import json_reader
 import node_types
 
+SAVE_PATH = "tests/System Test/Data/Basic Story.json"
+
 class StoryEngine:
     def __init__ (self, story):
         self.story = story
@@ -35,10 +37,10 @@ class StoryEngine:
         while self.current_index < len(self.story.nodes):
             self.process_current_node()
             self.current_index += 1
+            json_reader.update_current_node(SAVE_PATH, self.current_index)
 
 def main():
-    path_to_story = "tests/System Test/Data/Basic Story.json"
-    story = json_reader.read_json(path_to_story)
+    story = json_reader.read_json(SAVE_PATH)
     story_engine = StoryEngine(story)
     story_engine.run()
 

@@ -1,53 +1,84 @@
 {
-    "SCENE0": {
-        "TEXT": [
-            "ITEM 1",
-            "ITEM 2",
-            "ITEM 3"
-        ]
-    },
-    "DECISION0": {
-        "TEXT": [
-            "Will you go to scene1(1) or scene4(2)?"
+    "CURRENT_NODE": -1,
+    "PLAYER": {
+        "STATS": {
+            "SKILL": "0",
+            "STAMINA": "0",
+            "LUCK": "0"
+        },
+        "ITEMS": [
+            "SWORD",
+            "LEATHER ARMOUR",
+            "SHIELD",
+            "LANTERN",
+            "BACKPACK"
         ],
-        "GOTO": [
-            "SCENE1",
-            "SCENE4"
-        ]
+        "GOLD": "0",
+        "JEWELS": [],
+        "POTIONS": [],
+        "PROVISIONS": ""
     },
-    "COMBAT0": {
-        "TEXT": [
-            "COMBAT 1",
-            "COMBAT 2",
-            "COMBAT 3"
-        ]
-    },
-    "SCENE1": {
-        "TEXT": [
-            "SCENE1 ITEM 1",
-            "SCENE1 ITEM 2",
-            "SCENE1 ITEM 3"
-        ]
-    },
-    "SCENE2": {
-        "TEXT": [
-            "SCENE2 ITEM 1",
-            "SCENE2 ITEM 2",
-            "SCENE2 ITEM 3"
-        ]
-    },
-    "SCENE3": {
-        "TEXT": [
-            "SCENE3 ITEM 1",
-            "SCENE3 ITEM 2",
-            "SCENE3 ITEM 3"
-        ]
-    },
-    "SCENE4": {
-        "TEXT": [
-            "SCENE4 ITEM 1",
-            "SCENE4 ITEM 2",
-            "SCENE4 ITEM 3"
-        ]
+    "STORY": {
+        "SCENE0": {
+            "TEXT": [
+                "SCENE0 ITEM 1",
+                "SCENE0 ITEM 2",
+                "SCENE0 ITEM 3"
+            ]
+        },
+        "DECISION0": {
+            "TEXT": [
+                "Will you go to scene1(1) or scene4(2)?"
+            ],
+            "GOTO": [
+                "SCENE1",
+                "SCENE4"
+            ]
+        },
+        "COMBAT0": {
+            "TEXT": [
+                "COMBAT0 ITEM 1",
+                "COMBAT0 ITEM 2",
+                "COMBAT0 ITEM 3"
+            ],
+            "ENEMYLIST": {
+                "ENEMY0": {
+                    "SKILL": "0",
+                    "STRENGTH": "0"
+                },
+                "ENEMY1": {
+                    "SKILL": "0",
+                    "STRENGTH": "0"
+                }
+            }
+        },
+        "SCENE1": {
+            "TEXT": [
+                "SCENE1 ITEM 1",
+                "SCENE1 ITEM 2",
+                "SCENE1 ITEM 3"
+            ]
+        },
+        "SCENE2": {
+            "TEXT": [
+                "SCENE2 ITEM 1",
+                "SCENE2 ITEM 2",
+                "SCENE2 ITEM 3"
+            ]
+        },
+        "SCENE3": {
+            "TEXT": [
+                "SCENE3 ITEM 1",
+                "SCENE3 ITEM 2",
+                "SCENE3 ITEM 3"
+            ]
+        },
+        "SCENE4": {
+            "TEXT": [
+                "SCENE4 ITEM 1",
+                "SCENE4 ITEM 2",
+                "SCENE4 ITEM 3"
+            ]
+        }
     }
 }
