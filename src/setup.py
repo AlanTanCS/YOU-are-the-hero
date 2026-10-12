@@ -1,2 +1,9 @@
+import dice
+
 def player_setup():
-    pass
+    initial_skill = dice.roll_six()
+    initial_stamina = dice.roll_twelve()
+    initial_luck = dice.roll_six()
+
+    
+

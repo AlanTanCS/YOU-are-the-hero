@@ -6,12 +6,6 @@ class Story():
         self.nodes = nodes
         self.node_indexes = node_indexes
 
-# class Player():
-#     def __init__(self, json_object, nodes, node_indexes):
-#         self.data = json_object
-#         self.nodes = nodes
-#         self.node_indexes = node_indexes
-
 def update_current_node(path: str, new_node: int) -> None:
     with open(path) as json_data:
         json_object = json.load(json_data)
@@ -24,7 +18,6 @@ def update_current_node(path: str, new_node: int) -> None:
 def read_json(path: str) -> Story:
     with open(path) as json_data:
         json_object = json.load(json_data)
-        json_data.close()
         json_story = json_object["STORY"]
         nodes = list(json_story)
 
