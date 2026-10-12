@@ -1,37 +1,47 @@
-import json
+from node_handlers.scene_handler import handle as handle_scene
+from node_handlers.decision_handler import handle as handle_decision
+from node_handlers.combat_handler import handle as handle_combat
 
-def run():
-    with open("tests/System Test/Data/Basic Story.json") as json_data:
-        json_object = json.load(json_data)
-        json_data.close()
-        json_list = list(json_object)
-        index_lookup = { key: index for index, key in enumerate(json_list)}
-        CURRENT_INDEX = 0
-        while CURRENT_INDEX < len(json_list):
-            current_node = json_object[json_list[CURRENT_INDEX]]
+import json_reader
+import node_types
 
-            if json_list[CURRENT_INDEX][:5] == "SCENE":            
-                for i in current_node["TEXT"]: # Print all the text
-                    print(i)
-    
-            if json_list[CURRENT_INDEX][:8] == "DECISION":
-                for i in current_node["TEXT"]: # Print all the text
-                    print(i)
-                ans = int(input(""))
-                CURRENT_INDEX = index_lookup[current_node["GOTO"][ans - 1]] - 1
+class StoryEngine:
+    def __init__ (self, story):
+        self.story = story
+        self.current_index = 0
 
+    def current_node_name(self) -> str:
+        return self.story.nodes[self.current_index]
 
-            if json_list[CURRENT_INDEX][:6] == "COMBAT":
-                for i in current_node["TEXT"]: # Print all the text
-                    print(i)
+    def current_node(self) -> dict:
+        return self.story.data[self.current_node_name()]
 
-            
-            # Progress to next node
-            CURRENT_INDEX += 1
+    def process_current_node(self) -> None:
+        current_node_name = self.current_node_name()[:-1]
 
-        print(json_list[CURRENT_INDEX - 1])
+        handlers = { node_types.NodeType.SCENE: handle_scene,
+                     node_types.NodeType.DECISION: handle_decision,
+                     node_types.NodeType.COMBAT: handle_combat }
 
-        
+        handler = handlers[node_types.NodeType(current_node_name)]
+        next_node_name = handler(self.current_node())
+
+        # we need to go to a different node
+        if next_node_name is not None:
+            # increment by 1 after processing so go to scene before
+            self.current_index = self.story.node_indexes[next_node_name] - 1
+
+    def run(self) -> None:
+        while self.current_index < len(self.story.nodes):
+            self.process_current_node()
+            self.current_index += 1
+
+def main():
+    path_to_story = "tests/System Test/Data/Basic Story.json"
+    story = json_reader.read_json(path_to_story)
+    story_engine = StoryEngine(story)
+    story_engine.run()
+
 
 if __name__ == "__main__":
-    run()
+    main()
