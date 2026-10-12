@@ -1,0 +1,53 @@
+{
+    "SCENE0": {
+        "TEXT": [
+            "ITEM 1",
+            "ITEM 2",
+            "ITEM 3"
+        ]
+    },
+    "DECISION0": {
+        "TEXT": [
+            "Will you go to scene1(1) or scene4(2)?"
+        ],
+        "GOTO": [
+            "SCENE1",
+            "SCENE4"
+        ]
+    },
+    "COMBAT0": {
+        "TEXT": [
+            "COMBAT 1",
+            "COMBAT 2",
+            "COMBAT 3"
+        ]
+    },
+    "SCENE1": {
+        "TEXT": [
+            "SCENE1 ITEM 1",
+            "SCENE1 ITEM 2",
+            "SCENE1 ITEM 3"
+        ]
+    },
+    "SCENE2": {
+        "TEXT": [
+            "SCENE2 ITEM 1",
+            "SCENE2 ITEM 2",
+            "SCENE2 ITEM 3"
+        ]
+    },
+    "SCENE3": {
+        "TEXT": [
+            "SCENE3 ITEM 1",
+            "SCENE3 ITEM 2",
+            "SCENE3 ITEM 3"
+        ]
+    },
+    "SCENE4": {
+        "TEXT": [
+            "SCENE4 ITEM 1",
+            "SCENE4 ITEM 2",
+            "SCENE4 ITEM 3"
+        ]
+    }
+}
