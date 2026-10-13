@@ -1,0 +1,26 @@
+{
+    "STORY": {
+        "SCENE0": {
+            "TEXT": [
+                "FHAU8IOHDFDOIASHJFOIAS",
+                "suck my fat cock"
+            ]
+        },
+        "DECISION0": {
+            "TEXT": [
+                "SCENE0 (1) SCENE1 (2)"
+            ],
+            "GOTO": [
+                "SCENE0",
+                "SCENE1"
+            ]
+        },
+        "SCENE1": {
+            "TEXT": [
+                "FHAU8IOHDFDOIASHJFOIAS",
+                "suck my fat cock"
+            ]
+        }
+    },
+    "CURRENT_NODE": 3
+}
