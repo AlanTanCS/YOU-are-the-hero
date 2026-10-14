@@ -47,7 +47,7 @@ def parse_types(line_indexes: dict) -> dict:
 
     return line_indexes
 
-def parse_story(keywords_path: str, story_path: str):
+def parse_story(story_path: str):
 
     # Create lookup for each line
     line_indexes = {}
