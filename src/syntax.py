@@ -7,3 +7,8 @@ class Keywords(Enum):
     THEN = "THEN"
     GOTO = "GOTO"
     INPUT = "INPUT"
+
+class ComparisonOperators(Enum):
+    EQUALS = "=="
+    GREATER = ">"
+    LESS = "<"

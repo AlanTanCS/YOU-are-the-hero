@@ -1,0 +1,35 @@
+from syntax import ComparisonOperators
+from value_types import Types
+
+# Todo handle integer checks
+def handle_equals(lhs, rhs):
+    if lhs == rhs:
+        return True
+    return False
+
+def handle_greater(lhs, rhs):
+    if lhs > rhs:
+        return True
+    return False
+
+def handle_less(lhs, rhs):
+    if lhs < rhs:
+        return True
+    return False
+
+operator_table = {
+    ComparisonOperators.EQUALS: handle_equals,
+    ComparisonOperators.GREATER:  handle_greater,
+    ComparisonOperators.LESS: handle_less
+}
+
+def resolve_value(variable, variable_table):
+    if variable[0] != Types.VARIABLE.value:
+        return variable
+    return resolve_value(variable_table[variable[1]].split(), variable_table)
+
+def handle_operators(operator, lhs, rhs, variable_table):
+    lhs = resolve_value(lhs, variable_table)
+    rhs = resolve_value(rhs, variable_table)
+    operator = ComparisonOperators(operator)
+    return operator_table[operator](lhs, rhs)

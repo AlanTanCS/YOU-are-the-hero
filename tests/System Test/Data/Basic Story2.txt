@@ -1,35 +1,38 @@
 NODE setup
-    PRINT "Hi how are you?"
+    PRINT "Setup: This is the first Node"
     PRINT 2
+    PRINT "Setup: That was testing an integer"
 
 NODE intro
-    PRINT "Hello"
-    PRINT "Test"
-    PRINT "Again"
+    PRINT "Intro: Hello"
+    PRINT "Intro: This is the node after setup"
+    PRINT "Intro: There is a decision coming up"
 
 NODE windingpath
-    PRINT "Where do you want to go the Path (1) cave (2) or mountain (3)"
+    PRINT "Winding Path: Where do you want to go the intro (1) cave (2) or mountain (3)"
     INPUT choice
     IF choice == "1" THEN GOTO intro
     IF choice == "2" THEN GOTO cave
     IF choice == "3" THEN GOTO mountain
+    PRINT "Please enter a valid choice"
+    GOTO windingpath
 
 NODE cave
-    PRINT "Hello"
-    PRINT "Test"
-    PRINT "Again"
+    PRINT "Cave: Hello again"
+    PRINT "Cave: You are in the cave now"
+    PRINT "Cave: Its very dark and spooky here next is the mountain..."
 
 NODE mountain
-    PRINT "Hello"
-    PRINT "Test"
-    PRINT "Again"
+    PRINT "Mountain: Mountain time!"
+    PRINT "Mountain: I dont know what to write anymore"
+    PRINT "Mountain: Potato"
 
 NODE scene2
-    PRINT "Hello"
-    PRINT "Test"
-    PRINT "Again"
+    PRINT "Scene2: These are just"
+    PRINT "Scene2: Extra"
+    PRINT "Scene2: Scenes just for completeness"
 
 NODE test
-    PRINT "Hello"
-    PRINT "Test"
-    PRINT 2
+    PRINT "Test: Again extra"
+    PRINT "Test: Time to test an integer!"
+    PRINT 20

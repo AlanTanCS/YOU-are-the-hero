@@ -40,8 +40,8 @@ class StoryEngine:
             return -1
 
     def run(self):
-        self.handle_keyword(self.get_current_keyword(), self.get_current_line())
-        # while True:
-        #     self.handle_keyword(self.get_current_keyword(), self.get_current_line())
-        #     if self.next_line() == -1:
-        #         break
+        # self.handle_keyword(self.get_current_keyword(), self.get_current_line())
+        while True:
+            self.handle_keyword(self.get_current_keyword(), self.get_current_line())
+            if self.next_line() == -1:
+                break
