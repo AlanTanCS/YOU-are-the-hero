@@ -1,10 +1,12 @@
 from keyword_handlers import handle_keyword as handle
+from line_context import LineContext
 from story import Story
 
 class StoryEngine:
     def __init__ (self, story: Story):
         self.loc = 0
         self.story = story
+        self.variables = {}
         self.eof = story.line_indexes["EOF"] + 1
 
     def get_current_line_number(self) -> int:
@@ -26,7 +28,9 @@ class StoryEngine:
     def handle_keyword(self, keyword: str, line: str) -> None:
         # keyword will be None if we're looking at a line thats empty
         if keyword:
-            handle(keyword, line, self.get_current_line_number())
+            new_line = handle(LineContext(keyword, line, self.get_current_line_number(), self.story, self.variables))
+            if new_line:
+                self.set_current_line_number(new_line)
 
     def next_line(self) -> None | int:
         if self.loc < self.eof:

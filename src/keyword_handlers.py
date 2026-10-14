@@ -1,33 +1,44 @@
 from keywords import Keywords
+from line_context import LineContext
+from value_types import Types
 
-def handle_print(line: str):
-    print(line)
-    pass
+def handle_print(context: LineContext):
+    split = context.line.split()
+    type = split[0]
+    value = " ".join(split[1:])
+    if Types(type) == Types.INT or Types(type) == Types.STRING:
+        print(value)
 
-def handle_if(line: str):
-    pass
+def handle_if_then(context: LineContext):
+    split = context.line.split()
+    condition = split[:split.index(Keywords.THEN.value)]
+    branch = split[split.index(Keywords.THEN.value) + 1:]
+    print(condition, branch)
+    # Not always a GOTO here just temporary...
+    context.keyword = branch[0]
+    context.line = " ".join(branch)
+    return handle_keyword(context)
 
-def handle_then(line: str):
-    pass
 
-def handle_goto(line: str):
-    pass
+def handle_goto(context: LineContext):
+    return context.story.node_table[context.line]
 
-def handle_input(line: str):
-    pass
+def handle_input(context: LineContext):
+    player_input = input()
+    context.variable_table[context.line] = f"{Types.STRING.value} {player_input}"
 
 table = {
     Keywords.PRINT: handle_print,
-    Keywords.IF: handle_if,
-    Keywords.THEN: handle_then,
+    Keywords.IF: handle_if_then,
     Keywords.GOTO: handle_goto,
     Keywords.INPUT: handle_input
 }
 
 # Node is a special keyword and is handled in the parser when populating the table
-def handle_keyword(keyword_string: Keywords, line: str, loc: int) -> None:
-    keyword = Keywords(keyword_string)
+def handle_keyword(context: LineContext) -> None:
+    keyword = Keywords(context.keyword)
     if keyword == Keywords.NODE:
         return
-    removed_keyword = " ".join(line.split()[1:])
-    table[keyword](removed_keyword)
+    removed_keyword = " ".join(context.line.split()[1:])
+    context.line = removed_keyword
+    return table[keyword](context)

@@ -1,5 +1,6 @@
 NODE setup
-    PRINT "Hi"
+    PRINT "Hi how are you?"
+    PRINT 2
 
 NODE intro
     PRINT "Hello"
@@ -9,9 +10,9 @@ NODE intro
 NODE windingpath
     PRINT "Where do you want to go the Path (1) cave (2) or mountain (3)"
     INPUT choice
-    IF choice == 1 THEN GOTO intro
-    IF choice == 2 THEN GOTO cave
-    IF choice == 3 THEN GOTO mountain
+    IF choice == "1" THEN GOTO intro
+    IF choice == "2" THEN GOTO cave
+    IF choice == "3" THEN GOTO mountain
 
 NODE cave
     PRINT "Hello"
