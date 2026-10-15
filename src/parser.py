@@ -14,7 +14,7 @@ def create_node_table(line_indexes: dict) -> dict:
         node_removed = value.split()[1:]
         index = " ".join(node_removed)
         if index in node_table:
-            raise DuplicateNodeException(node_table[index] + 1, key + 1, index)
+            raise DuplicateNodeException(node_table[index], key + 1, index)
         node_table[index] = key + 1
 
     return node_table
