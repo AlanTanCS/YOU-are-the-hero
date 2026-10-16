@@ -25,3 +25,10 @@ class InvalidConditionException(Exception):
     def __init__(self, line_number: int, line: str, oper_num: int):
         self.message = f"Expected number of operands and operators {oper_num} does not equal 3 at line {line_number}: {line}"
         super().__init__(self.message)
+
+class InvalidNumberOfArguments(Exception):
+    """Exception raised for functions with an invalid number of arguments error scenarios."""
+
+    def __init__(self, line_number: int, line: str, arguments: int, expected: int):
+        self.message = f"Expected number of arguments {arguments} does not equal expected {expected} at line {line_number}: {line}"
+        super().__init__(self.message)

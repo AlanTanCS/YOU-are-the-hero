@@ -39,8 +39,11 @@ class StoryEngine:
             # End of file
             return -1
 
+    def step(self):
+        self.handle_keyword(self.get_current_keyword(), self.get_current_line())
+        return self.next_line()
+
     def run(self):
         while True:
-            self.handle_keyword(self.get_current_keyword(), self.get_current_line())
-            if self.next_line() == -1:
+            if self.step() == -1:
                 break

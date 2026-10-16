@@ -9,6 +9,9 @@ def handle_print(context: LineContext):
     value = " ".join(split[1:])
     if Types(type) == Types.INTEGER or Types(type) == Types.STRING:
         print(value)
+    else:
+        # Handle variables here by resolving the variable value and checking for if it has been defined yet in the variable table
+        pass
 
 def handle_if_then(context: LineContext):
     split = context.line.split()

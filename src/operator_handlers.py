@@ -26,7 +26,7 @@ operator_table = {
 def resolve_value(variable, variable_table):
     if variable[0] != Types.VARIABLE.value:
         return variable
-    return resolve_value(variable_table[variable[1]].split(), variable_table)
+    return resolve_value(variable_table[" ".join(variable)].split(), variable_table)
 
 def handle_operators(operator, lhs, rhs, variable_table):
     lhs = resolve_value(lhs, variable_table)
