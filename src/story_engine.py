@@ -3,10 +3,10 @@ from line_context import LineContext
 from story import Story
 
 class StoryEngine:
-    def __init__ (self, story: Story):
+    def __init__ (self, story: Story, variables: dict):
         self.loc = 0
         self.story = story
-        self.variables = {}
+        self.variables = variables
         self.eof = story.line_indexes["EOF"] + 1
 
     def get_current_line_number(self) -> int:

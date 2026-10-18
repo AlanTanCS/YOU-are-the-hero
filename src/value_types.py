@@ -4,3 +4,4 @@ class Types(Enum):
     STRING = "<str>"
     INTEGER = "<int>"
     VARIABLE = "<var>"
+    EXPRESSION = "<expr>"

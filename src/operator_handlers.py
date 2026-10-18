@@ -1,5 +1,5 @@
 from syntax import ComparisonOperators
-from value_types import Types
+from resolve_value import resolve_value
 
 # Todo handle integer checks
 def handle_equals(lhs, rhs):
@@ -22,11 +22,6 @@ operator_table = {
     ComparisonOperators.GREATER:  handle_greater,
     ComparisonOperators.LESS: handle_less
 }
-
-def resolve_value(variable, variable_table):
-    if variable[0] != Types.VARIABLE.value:
-        return variable
-    return resolve_value(variable_table[" ".join(variable)].split(), variable_table)
 
 def handle_operators(operator, lhs, rhs, variable_table):
     lhs = resolve_value(lhs, variable_table)

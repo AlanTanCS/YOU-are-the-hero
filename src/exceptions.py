@@ -32,3 +32,24 @@ class InvalidNumberOfArguments(Exception):
     def __init__(self, line_number: int, line: str, arguments: int, expected: int):
         self.message = f"Expected number of arguments {arguments} does not equal expected {expected} at line {line_number}: {line}"
         super().__init__(self.message)
+
+class InvalidVariableName(Exception):
+    """Exception raised for functions with an invalid number of arguments error scenarios."""
+
+    def __init__(self, variable_name: str):
+        self.message = f"Variable name must be alphanumeric: \"{variable_name}\" is invalid"
+        super().__init__(self.message)
+
+class InvalidExpression(Exception):
+    """Exception raised for expressions with an invalid structure error scenarios."""
+
+    def __init__(self, expression: str):
+        self.message = f"Expressions must have closing parethesis: {expression}"
+        super().__init__(self.message)
+
+class IllegalTypeOperation(Exception):
+    """Exception raised for operations between disagreeing type error scenarios."""
+
+    def __init__(self, expression: str):
+        self.message = f"Failure to determine type: {expression}"
+        super().__init__(self.message)

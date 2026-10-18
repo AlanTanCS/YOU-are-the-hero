@@ -7,6 +7,7 @@ NODE intro
     PRINT "Intro: Hello"
     PRINT "Intro: This is the node after setup"
     PRINT "Intro: There is a decision coming up"
+    SET health (1000 +(20 + 10 + test))
 
 NODE windingpath
     PRINT "Winding Path: Where do you want to go the intro (1) cave (2) or mountain (3)"

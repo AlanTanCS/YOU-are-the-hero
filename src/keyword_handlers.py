@@ -37,11 +37,15 @@ def handle_input(context: LineContext):
     player_input = input()
     context.variable_table[context.line] = f"{Types.STRING.value} {player_input}"
 
+def handle_set(context: LineContext):
+    pass
+
 keyword_table = {
     Keywords.PRINT: handle_print,
     Keywords.IF: handle_if_then,
     Keywords.GOTO: handle_goto,
-    Keywords.INPUT: handle_input
+    Keywords.INPUT: handle_input,
+    Keywords.SET: handle_set
 }
 
 # Node is a special keyword and is handled in the parser when populating the table
