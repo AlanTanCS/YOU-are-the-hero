@@ -1,5 +1,6 @@
 from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, IllegalTypeOperation
-from syntax import Keywords
+from operator_handlers import resolve_expression
+from syntax import Keywords, ArithmeticOperators
 from value_types import Types
 
 import re
@@ -45,7 +46,6 @@ def set_type(line, variables):
                 variables[line] = None
         return f"{Types.VARIABLE.value} {line}"
     if type == Types.EXPRESSION:
-        # TODO calculate adding literals here during parsing
 
         # Check if expression is valid by checking parenthesis
         parentheses_only = re.sub(r"[^()]", "", line)
@@ -68,6 +68,8 @@ def set_type(line, variables):
             except:
                 if element[0] == '"' and element[-1] == '"':
                     out.append(Types.STRING.value)
+                    out.append(element[1:-1])
+                    continue
                 elif element != "-" and element != "+" and element != ")":
                     if element not in variables:
                         variables[element] = None
@@ -77,7 +79,21 @@ def set_type(line, variables):
         if Types.STRING.value in out and Types.INTEGER.value in out:
             raise IllegalTypeOperation(line)
 
-        return f"{" ".join(out)}"
+        expression = " ".join(out)
+        simplified, unresolved_variables = resolve_expression(expression, variables, line)
+        simplified = simplified[0].split()
+        if unresolved_variables != []:
+            expression = f"{simplified[1]} {simplified[0]} {simplified[2]}"
+            for i in unresolved_variables:
+                split = i.split()
+                expression += f" {split[1]} {split[0]} {split[2]}"
+            return f"{Types.EXPRESSION.value} ( {expression} )"
+
+        if simplified[1] == ArithmeticOperators.SUB.value:
+            return f"{simplified[0]} {simplified[1]}{simplified[2]}"
+
+        return f"{simplified[0]} {simplified[2]}"
+
 
 def parse_types(line_indexes: dict, variables) -> dict:
     for line_number, line in line_indexes.items():
@@ -154,7 +170,7 @@ def parse_story(story_path: str):
     with open(story_path) as story_data:
         for i, line in enumerate(story_data):
             line = line.strip()
-            if line == '':
+            if line == '' or line[:2] == "//":
                 continue
             if line.split()[0] not in Keywords:
                 raise SyntaxException(i + 1, line)

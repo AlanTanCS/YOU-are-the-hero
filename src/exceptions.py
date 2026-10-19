@@ -53,3 +53,24 @@ class IllegalTypeOperation(Exception):
     def __init__(self, expression: str):
         self.message = f"Failure to determine type: {expression}"
         super().__init__(self.message)
+
+class IllegalStringOperation(Exception):
+    """Exception raised for illegal operation on strings error scenarios."""
+
+    def __init__(self, expression: str):
+        self.message = f"Illegal operation between strings: {expression}"
+        super().__init__(self.message)
+
+class SetUsedOnNonVariable(Exception):
+    """Exception raised for attempt to set a non variable error scenarios."""
+
+    def __init__(self, line_number: int):
+        self.message = f"Cannot use SET on a non-variable at line {line_number}"
+        super().__init__(self.message)
+
+class VariableUnset(Exception):
+    """Exception raised for attempt to use an unset variable error scenarios."""
+
+    def __init__(self, line_number: int):
+        self.message = f"Cannot use non SET variables at line {line_number}"
+        super().__init__(self.message)

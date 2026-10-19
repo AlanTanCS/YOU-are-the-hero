@@ -1,6 +1,7 @@
-from syntax import Keywords, ComparisonOperators
+from exceptions import SetUsedOnNonVariable, VariableUnset
 from line_context import LineContext
-from operator_handlers import handle_operators
+from operator_handlers import handle_comparison_operators, resolve_expression
+from syntax import Keywords, ComparisonOperators
 from value_types import Types
 
 def handle_print(context: LineContext):
@@ -22,7 +23,7 @@ def handle_if_then(context: LineContext):
     # Not always a GOTO here just temporary...
     for i in range(len(condition)):
         if condition[i] in ComparisonOperators:
-            result = handle_operators(condition[i], condition[:i], condition[i + 1:], context.variable_table)
+            result = handle_comparison_operators(condition[i], " ".join(condition[:i]), " ".join(condition[i + 1:]), context.variable_table)
 
     if result:
         context.keyword = branch[0]
@@ -35,10 +36,18 @@ def handle_goto(context: LineContext):
 
 def handle_input(context: LineContext):
     player_input = input()
-    context.variable_table[context.line] = f"{Types.STRING.value} {player_input}"
+    context.line = f"{context.line} {Types.STRING.value} {player_input}"
+    handle_set(context)
 
 def handle_set(context: LineContext):
-    pass
+    split = context.line.split()
+    if split[0] != Types.VARIABLE.value:
+        raise SetUsedOnNonVariable(context.loc)
+    result, unresolved_vars = resolve_expression(" ".join(split[2:]), context.variable_table, context.line)
+    result = result[0].split()
+    context.variable_table[split[1]] = f"{result[0]} {result[2]}"
+    if unresolved_vars != []:
+        raise VariableUnset(context.loc)
 
 keyword_table = {
     Keywords.PRINT: handle_print,
