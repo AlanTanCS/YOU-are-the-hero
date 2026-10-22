@@ -1,4 +1,4 @@
-from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, IllegalTypeOperation
+from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, IllegalTypeOperation, VariableUnset
 from operator_handlers import resolve_expression
 from syntax import Keywords, ArithmeticOperators
 from value_types import Types
@@ -35,7 +35,7 @@ def determine_type(line):
             return Types.VARIABLE
         raise InvalidVariableName(line)
 
-def set_type(line, variables):
+def set_type(line, variables, line_number):
     type = determine_type(line)
     if type == Types.STRING:
         return f"{Types.STRING.value} {line[1:-1]}"
@@ -72,7 +72,7 @@ def set_type(line, variables):
                     continue
                 elif element != "-" and element != "+" and element != ")":
                     if element not in variables:
-                        variables[element] = None
+                        raise VariableUnset(line_number)
                     out.append(Types.VARIABLE.value)
             out.append(element)
 
@@ -81,7 +81,7 @@ def set_type(line, variables):
 
         expression = " ".join(out)
         simplified, unresolved_variables = resolve_expression(expression, variables, line)
-        simplified = simplified[0].split()
+        simplified = simplified[0].split(maxsplit=2)
         if unresolved_variables != []:
             expression = f"{simplified[1]} {simplified[0]} {simplified[2]}"
             for i in unresolved_variables:
@@ -114,7 +114,7 @@ def parse_types(line_indexes: dict, variables) -> dict:
 
 def parse_print(line_number, line, line_indexes, variables):
     removed_keyword = " ".join(line.split()[1:])
-    typed_word = set_type(removed_keyword, variables)
+    typed_word = set_type(removed_keyword, variables, line_number)
 
     line_indexes[line_number] = f"{Keywords.PRINT.value} {typed_word}"
 
@@ -129,7 +129,7 @@ def parse_if_then(line_number, line, line_indexes, variables):
 
     # parse literals
     for literal in range(len(condition)):
-        typed_word = set_type(condition[literal], variables)
+        typed_word = set_type(condition[literal], variables, line_number)
         condition[literal] = f"{typed_word}"
 
     condition.insert(1, operator)
@@ -151,10 +151,10 @@ def parse_input (line_number, line, line_indexes, variables):
 
 def parse_set (line_number, line, line_indexes, variables):
     split = line.split(maxsplit=2)
-    rhs = set_type(split[2], variables)
+    rhs = set_type(split[2], variables, line_number)
     variable = split[1]
     variables[variable] = rhs
-    lhs = set_type(variable, variables)
+    lhs = set_type(variable, variables, line_number)
 
     line_indexes[line_number] = f"{Keywords.SET.value} {lhs} {rhs}"
 
@@ -183,4 +183,3 @@ def parse_story(story_path: str):
     line_indexes = parse_types(line_indexes, variables)
 
     return line_indexes, node_table, variables
-

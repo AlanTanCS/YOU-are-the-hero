@@ -7,11 +7,19 @@ from value_types import Types
 def handle_print(context: LineContext):
     split = context.line.split()
     type = split[0]
+    if Types(type) == Types.EXPRESSION:
+        result, unresolved_vars = resolve_expression(context.line, context.variable_table, context.line)
+        print(result, context.line, unresolved_vars)
+        result = result[0].split(maxsplit=2)
+        if unresolved_vars != []:
+            raise VariableUnset(context.loc)
+        split = f"{result[0]} {result[2]}"
     value = " ".join(split[1:])
     if Types(type) == Types.INTEGER or Types(type) == Types.STRING:
         print(value)
     else:
-        # Handle variables here by resolving the variable value and checking for if it has been defined yet in the variable table
+        # will be an expression at this point
+
         pass
 
 def handle_if_then(context: LineContext):
@@ -44,10 +52,10 @@ def handle_set(context: LineContext):
     if split[0] != Types.VARIABLE.value:
         raise SetUsedOnNonVariable(context.loc)
     result, unresolved_vars = resolve_expression(" ".join(split[2:]), context.variable_table, context.line)
-    result = result[0].split()
-    context.variable_table[split[1]] = f"{result[0]} {result[2]}"
+    result = result[0].split(maxsplit=2)
     if unresolved_vars != []:
         raise VariableUnset(context.loc)
+    context.variable_table[split[1]] = f"{result[0]} {result[2]}"
 
 keyword_table = {
     Keywords.PRINT: handle_print,
