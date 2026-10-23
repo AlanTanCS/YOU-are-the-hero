@@ -1,4 +1,4 @@
-from parser import parse_story
+from parser import parse_story, print_line_indexes
 from story import Story
 from story_engine import StoryEngine
 
@@ -8,7 +8,8 @@ def main():
     line_indexes, node_table, variables = parse_story(SAVE_PATH)
     story = Story(line_indexes, node_table)
     story_engine = StoryEngine(story, variables)
-    story_engine.run()
+    print_line_indexes(line_indexes)
+    # story_engine.run()
 
 if __name__ == "__main__":
     main()

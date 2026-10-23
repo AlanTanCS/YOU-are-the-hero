@@ -23,7 +23,7 @@ class InvalidConditionException(Exception):
     """Exception raised for conditions with too many arguements error scenarios."""
 
     def __init__(self, line_number: int, line: str, oper_num: int):
-        self.message = f"Expected number of operands and operators {oper_num} does not equal 3 at line {line_number}: {line}"
+        self.message = f"Number of operands and operators {oper_num} does not equal 3 at line {line_number}: {line}"
         super().__init__(self.message)
 
 class InvalidNumberOfArguments(Exception):

@@ -1,6 +1,7 @@
 from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, IllegalTypeOperation, VariableUnset
 from operator_handlers import resolve_expression
-from syntax import Keywords, ArithmeticOperators
+from syntax import Keywords, ComparisonOperators, ArithmeticOperators
+from token import Token
 from value_types import Types
 
 import re
@@ -23,8 +24,12 @@ def create_node_table(line_indexes: dict) -> dict:
     return node_table
 
 def determine_type(line):
-    if line[0] == '(' and line[-1] == ')':
-        return Types.EXPRESSION
+    if line[0] == '(':
+        return Types.EXPRESSION_START
+    if line[0] == ')':
+        return Types.EXPRESSION_END
+    if line in ArithmeticOperators:
+        return Types.OPERATOR
     if line[0] == '"' and line[-1] == '"':
         return Types.STRING
     try:
@@ -35,17 +40,27 @@ def determine_type(line):
             return Types.VARIABLE
         raise InvalidVariableName(line)
 
-def set_type(line, variables, line_number):
+def print_line_indexes(line_indexes: dict):
+    for key, value in line_indexes.items():
+        if type(value) is list:
+            line = ""
+            for token in value:
+                line = f"{line} {token.type} {token.value}"
+            print(key, line)
+        else:
+            print(key,value)
+
+def tokenise(line, variables):
     type = determine_type(line)
     if type == Types.STRING:
-        return f"{Types.STRING.value} {line[1:-1]}"
+        return [Token(type, line[1:-1])]
     if type == Types.INTEGER:
-        return f"{Types.INTEGER.value} {line}"
+        return [Token(type, line)]
     if type == Types.VARIABLE:
         if line not in variables:
                 variables[line] = None
-        return f"{Types.VARIABLE.value} {line}"
-    if type == Types.EXPRESSION:
+        return [Token(type, line)]
+    if type == Types.EXPRESSION_START:
 
         # Check if expression is valid by checking parenthesis
         parentheses_only = re.sub(r"[^()]", "", line)
@@ -56,69 +71,42 @@ def set_type(line, variables, line_number):
 
         elements = re.findall(r'"[^"\n]*"|\(|\)|\+|-|\d+|[A-Za-z_]\w*', line)
         out = []
-        # Loop through expression assigning types
         for element in elements:
-            if element == "(":
-                out.append(Types.EXPRESSION.value)
-                out.append(element)
-                continue
-            try:
-                int(element)
-                out.append(Types.INTEGER.value)
-            except:
-                if element[0] == '"' and element[-1] == '"':
-                    out.append(Types.STRING.value)
-                    out.append(element[1:-1])
-                    continue
-                elif element != "-" and element != "+" and element != ")":
-                    if element not in variables:
-                        raise VariableUnset(line_number)
-                    out.append(Types.VARIABLE.value)
-            out.append(element)
+            out.append(Token(determine_type(element), element))
 
-        if Types.STRING.value in out and Types.INTEGER.value in out:
-            raise IllegalTypeOperation(line)
+        return out
 
-        expression = " ".join(out)
-        simplified, unresolved_variables = resolve_expression(expression, variables, line)
-        simplified = simplified[0].split(maxsplit=2)
-        if unresolved_variables != []:
-            expression = f"{simplified[1]} {simplified[0]} {simplified[2]}"
-            for i in unresolved_variables:
-                split = i.split()
-                expression += f" {split[1]} {split[0]} {split[2]}"
-            return f"{Types.EXPRESSION.value} ( {expression} )"
+def parse_statement(line, line_number, variables):
+    enum_value = Keywords(line.split()[0])
+    
+    result = line
 
-        if simplified[1] == ArithmeticOperators.SUB.value:
-            return f"{simplified[0]} {simplified[1]}{simplified[2]}"
+    if enum_value == Keywords.NODE:
+        result = parse_node(line)
+    if enum_value == Keywords.PRINT:
+        result = parse_print(line, variables)
+    if enum_value == Keywords.IF:
+        result = parse_if_then(line_number, line, variables)
+    if enum_value == Keywords.GOTO:
+        result = parse_goto(line_number, line)
+    if enum_value == Keywords.INPUT:
+        result = parse_input(line_number, line, variables)
+    if enum_value == Keywords.SET:
+        result = parse_set(line, variables)
 
-        return f"{simplified[0]} {simplified[2]}"
+    return result
 
+def parse_node(line):
+    location = line.split(maxsplit=2)[1]
+    return [Token(Types.LOCATION, location), Token(Types.KEYWORD, Keywords.NODE)]
 
-def parse_types(line_indexes: dict, variables) -> dict:
-    for line_number, line in line_indexes.items():
-        if line_number == "EOF":
-            continue
-        enum_value = Keywords(line.split()[0])
-
-        if enum_value == Keywords.PRINT:
-            parse_print(line_number, line, line_indexes, variables)
-        if enum_value == Keywords.IF:
-            parse_if_then(line_number, line, line_indexes, variables)
-        if enum_value == Keywords.INPUT:
-            parse_input(line_number, line, line_indexes, variables)
-        if enum_value == Keywords.SET:
-            parse_set(line_number, line, line_indexes, variables)
-
-    return line_indexes
-
-def parse_print(line_number, line, line_indexes, variables):
+def parse_print(line, variables):
     removed_keyword = " ".join(line.split()[1:])
-    typed_word = set_type(removed_keyword, variables, line_number)
+    token_list = tokenise(removed_keyword, variables)
 
-    line_indexes[line_number] = f"{Keywords.PRINT.value} {typed_word}"
+    return[Token(Types.KEYWORD, Keywords.PRINT)] + token_list
 
-def parse_if_then(line_number, line, line_indexes, variables):
+def parse_if_then(line_number, line, variables):
     split = line.split()
     condition = split[1:split.index(Keywords.THEN.value)]
     branch = split[split.index(Keywords.THEN.value) + 1:]
@@ -129,35 +117,42 @@ def parse_if_then(line_number, line, line_indexes, variables):
 
     # parse literals
     for literal in range(len(condition)):
-        typed_word = set_type(condition[literal], variables, line_number)
-        condition[literal] = f"{typed_word}"
+        typed_word = tokenise(condition[literal], variables)
+        condition[literal] = typed_word[0]
 
-    condition.insert(1, operator)
-    line_indexes[line_number] = f"{Keywords.IF.value} {" ".join(condition)} {Keywords.THEN.value} {" ".join(branch)}"
+    condition.insert(1, Token(Types.OPERATOR, ComparisonOperators(operator)))
+    if branch[0] not in Keywords:
+        raise SyntaxException(line_number, line)
+        
+    return [Token(Types.KEYWORD, Keywords.IF)] + condition + [Token(Types.KEYWORD, Keywords.THEN)] + parse_statement(" ".join(branch), line_number, variables)
 
-def parse_input (line_number, line, line_indexes, variables):
+def parse_goto(line_number, line):
+    split = line.split()
+    if len(split) != 2:
+        raise InvalidNumberOfArguments(line_number, line, len(split), 2)
+
+    return [Token(Types.KEYWORD, Keywords.GOTO), Token(Types.LOCATION, split[1])]
+
+def parse_input (line_number, line, variables):
     variable = line.split()[1:]
     if len(variable) > 1:
         raise InvalidNumberOfArguments(line_number, line, len(variable), 1)
 
-    type = determine_type(variable[0])
+    token = tokenise(variable[0], variables)
 
-    if type != Types.VARIABLE:
+    if token[0].type != Types.VARIABLE:
         raise InvalidTypeException(line_number, line)
 
-    if variable[0] not in variables:
-        variables[variable[0]] = None
-    line_indexes[line_number] = f"{Keywords.INPUT.value} {Types.VARIABLE.value} {variable[0]}"
+    return [Token(Types.KEYWORD, Keywords.INPUT)] + token
 
-def parse_set (line_number, line, line_indexes, variables):
+def parse_set (line, variables):
     split = line.split(maxsplit=2)
-    rhs = set_type(split[2], variables, line_number)
+    rhs = tokenise(split[2], variables)
     variable = split[1]
-    variables[variable] = rhs
-    lhs = set_type(variable, variables, line_number)
+    variables[variable] = rhs[0]
+    lhs = tokenise(variable, variables)
 
-    line_indexes[line_number] = f"{Keywords.SET.value} {lhs} {rhs}"
-
+    return [Token(Types.KEYWORD, Keywords.SET)] + lhs + rhs
 
 def parse_story(story_path: str):
 
@@ -180,6 +175,13 @@ def parse_story(story_path: str):
 
 
     node_table = create_node_table(line_indexes)
-    line_indexes = parse_types(line_indexes, variables)
+
+    # Parse each line
+    for line_number, line in line_indexes.items():
+        if line_number == "EOF":
+            continue
+        result = parse_statement(line, line_number, variables)
+
+        line_indexes[line_number] = result
 
     return line_indexes, node_table, variables
