@@ -1,61 +1,66 @@
-from exceptions import SetUsedOnNonVariable, VariableUnset
+from exceptions import SetUsedOnNonVariable, VariableUnset, IllegalStringOperation
 from line_context import LineContext
-from operator_handlers import handle_comparison_operators, resolve_expression
-from syntax import Keywords, ComparisonOperators
+from operator_handlers import handle_comparison_operators, resolve_expression, resolve_value
+from syntax import Keywords
+from token import Token
 from value_types import Types
 
 def handle_print(context: LineContext):
-    split = context.line.split()
-    type = split[0]
-    if Types(type) == Types.EXPRESSION:
-        result, unresolved_vars = resolve_expression(context.line, context.variable_table, context.line)
-        print(result, context.line, unresolved_vars)
-        result = result[0].split(maxsplit=2)
-        if unresolved_vars != []:
+    argument = context.line[0]
+    if argument.type == Types.INTEGER or argument.type == Types.STRING:
+        print(argument.value)
+    if argument.type == Types.VARIABLE:
+        print(resolve_value(argument, context.variable_table).value)
+    if argument.type == Types.EXPRESSION_START:
+        try:
+            print(resolve_expression(context.line, context.variable_table).value)
+        except TypeError:
+            raise IllegalStringOperation(context.loc)
+        except NameError:
             raise VariableUnset(context.loc)
-        split = f"{result[0]} {result[2]}"
-    value = " ".join(split[1:])
-    if Types(type) == Types.INTEGER or Types(type) == Types.STRING:
-        print(value)
-    else:
-        # will be an expression at this point
-
-        pass
 
 def handle_if_then(context: LineContext):
-    split = context.line.split()
-    condition = split[:split.index(Keywords.THEN.value)]
-    branch = split[split.index(Keywords.THEN.value) + 1:]
+    condition = []
+    branch = []
+    for token_pos in range(len(context.line)):
+        if context.line[token_pos].value == Keywords.THEN:
+            condition = context.line[:token_pos]
+            branch = context.line[token_pos + 1:]
+            break
 
     result = False
-    # Not always a GOTO here just temporary...
     for i in range(len(condition)):
-        if condition[i] in ComparisonOperators:
-            result = handle_comparison_operators(condition[i], " ".join(condition[:i]), " ".join(condition[i + 1:]), context.variable_table)
+        if condition[i].type == Types.COMPARISON_OPERATOR:
+            result = handle_comparison_operators(condition[i], condition[:i], condition[i + 1:], context.variable_table)
 
     if result:
         context.keyword = branch[0]
-        context.line = " ".join(branch)
+        context.line = branch
         return handle_keyword(context)
 
-
 def handle_goto(context: LineContext):
-    return context.story.node_table[context.line]
+    return context.story.node_table[context.line[0].value]
 
 def handle_input(context: LineContext):
     player_input = input()
-    context.line = f"{context.line} {Types.STRING.value} {player_input}"
+    context.line.append(Token(Types.STRING, player_input))
     handle_set(context)
 
 def handle_set(context: LineContext):
-    split = context.line.split()
-    if split[0] != Types.VARIABLE.value:
+    if context.line[0].type != Types.VARIABLE:
         raise SetUsedOnNonVariable(context.loc)
-    result, unresolved_vars = resolve_expression(" ".join(split[2:]), context.variable_table, context.line)
-    result = result[0].split(maxsplit=2)
-    if unresolved_vars != []:
+    if context.line[1].type != Types.EXPRESSION_START:
+        context.variable_table[context.line[0].value] = context.line[1]
+        return
+
+    # we have an expression
+    try:
+        result = resolve_expression(context.line[1:], context.variable_table)
+    except TypeError:
+        raise IllegalStringOperation(context.loc)
+    except NameError:
         raise VariableUnset(context.loc)
-    context.variable_table[split[1]] = f"{result[0]} {result[2]}"
+    context.variable_table[context.line[0].value] = result
 
 keyword_table = {
     Keywords.PRINT: handle_print,
@@ -67,9 +72,10 @@ keyword_table = {
 
 # Node is a special keyword and is handled in the parser when populating the table
 def handle_keyword(context: LineContext) -> None:
-    keyword = Keywords(context.keyword)
+    keyword = context.keyword.value
     if keyword == Keywords.NODE:
         return
-    removed_keyword = " ".join(context.line.split()[1:])
+    removed_keyword = context.line[1:]
+
     context.line = removed_keyword
     return keyword_table[keyword](context)

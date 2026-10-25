@@ -21,7 +21,7 @@ class StoryEngine:
     def get_current_keyword(self) -> str:
         current_line = self.get_current_line()
         if current_line:
-            return current_line.split()[0]
+            return current_line[0]
         else:
             return None
 

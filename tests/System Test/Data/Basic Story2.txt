@@ -8,10 +8,14 @@ NODE intro
     PRINT "Intro: This is the node after setup"
     PRINT "Intro: There is a decision coming up"
 
+    //SET variable (10)
     SET variable 10
     SET test 19
+    SET health (1000 +(20 + 10 + (10 + 30) - test) + (10-20) + 100 - 10 + variable)
 
-    SET health (-1000 +(20 + 10 + (10 + 30) - test) + (10-20) + 100 - 10 + variable)
+    PRINT health
+    SET variable "."
+    PRINT ("HI" +(" THIS" + "  IS" + (" AN" + " EXPRESSION") + " I") + (" AM"+" TESTING") + " OK" + variable + " Thanks" + variable)
 
 NODE windingpath
     PRINT "Winding Path: Where do you want to go the intro (1) cave (2) or mountain (3)"

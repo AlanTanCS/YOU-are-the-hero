@@ -1,5 +1,4 @@
 from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, IllegalTypeOperation, VariableUnset
-from operator_handlers import resolve_expression
 from syntax import Keywords, ComparisonOperators, ArithmeticOperators
 from token import Token
 from value_types import Types
@@ -29,7 +28,7 @@ def determine_type(line):
     if line[0] == ')':
         return Types.EXPRESSION_END
     if line in ArithmeticOperators:
-        return Types.OPERATOR
+        return Types.ARITHMETIC_OPERATOR
     if line[0] == '"' and line[-1] == '"':
         return Types.STRING
     try:
@@ -38,17 +37,10 @@ def determine_type(line):
     except:
         if line.isalnum():
             return Types.VARIABLE
+        if " " in line:
+            # There are too many arguemnts
+            return None
         raise InvalidVariableName(line)
-
-def print_line_indexes(line_indexes: dict):
-    for key, value in line_indexes.items():
-        if type(value) is list:
-            line = ""
-            for token in value:
-                line = f"{line} {token.type} {token.value}"
-            print(key, line)
-        else:
-            print(key,value)
 
 def tokenise(line, variables):
     type = determine_type(line)
@@ -64,7 +56,7 @@ def tokenise(line, variables):
 
         # Check if expression is valid by checking parenthesis
         parentheses_only = re.sub(r"[^()]", "", line)
-        while re.search(r'\(\)', parentheses_only):  
+        while re.search(r'\(\)', parentheses_only):
             parentheses_only = re.sub(r'\(\)', '', parentheses_only)
         if parentheses_only:
             raise InvalidExpression(line)
@@ -72,7 +64,15 @@ def tokenise(line, variables):
         elements = re.findall(r'"[^"\n]*"|\(|\)|\+|-|\d+|[A-Za-z_]\w*', line)
         out = []
         for element in elements:
-            out.append(Token(determine_type(element), element))
+            type = determine_type(element)
+            if type == Types.STRING:
+                out.append(Token(type, element[1:-1]))
+            elif type == Types.VARIABLE:
+                if line not in variables:
+                    variables[line] = None
+                out.append(Token(type, element))
+            else:
+                out.append(Token(type, element))
 
         return out
 
@@ -84,7 +84,7 @@ def parse_statement(line, line_number, variables):
     if enum_value == Keywords.NODE:
         result = parse_node(line)
     if enum_value == Keywords.PRINT:
-        result = parse_print(line, variables)
+        result = parse_print(line_number, line, variables)
     if enum_value == Keywords.IF:
         result = parse_if_then(line_number, line, variables)
     if enum_value == Keywords.GOTO:
@@ -98,10 +98,14 @@ def parse_statement(line, line_number, variables):
 
 def parse_node(line):
     location = line.split(maxsplit=2)[1]
-    return [Token(Types.LOCATION, location), Token(Types.KEYWORD, Keywords.NODE)]
+    return [Token(Types.KEYWORD, Keywords.NODE), Token(Types.LOCATION, location)]
 
-def parse_print(line, variables):
+def parse_print(line_number, line, variables):
     removed_keyword = " ".join(line.split()[1:])
+
+    if not determine_type(removed_keyword):
+        raise InvalidNumberOfArguments(line_number, line, 1)
+
     token_list = tokenise(removed_keyword, variables)
 
     return[Token(Types.KEYWORD, Keywords.PRINT)] + token_list
@@ -111,7 +115,7 @@ def parse_if_then(line_number, line, variables):
     condition = split[1:split.index(Keywords.THEN.value)]
     branch = split[split.index(Keywords.THEN.value) + 1:]
     if len(condition) != 3:
-        raise InvalidNumberOfArguments(line_number, line, len(condition), 3)
+        raise InvalidNumberOfArguments(line_number, line, 3)
     # remove the operator
     operator = condition.pop(1)
 
@@ -120,7 +124,7 @@ def parse_if_then(line_number, line, variables):
         typed_word = tokenise(condition[literal], variables)
         condition[literal] = typed_word[0]
 
-    condition.insert(1, Token(Types.OPERATOR, ComparisonOperators(operator)))
+    condition.insert(1, Token(Types.COMPARISON_OPERATOR, ComparisonOperators(operator)))
     if branch[0] not in Keywords:
         raise SyntaxException(line_number, line)
         
@@ -129,14 +133,14 @@ def parse_if_then(line_number, line, variables):
 def parse_goto(line_number, line):
     split = line.split()
     if len(split) != 2:
-        raise InvalidNumberOfArguments(line_number, line, len(split), 2)
+        raise InvalidNumberOfArguments(line_number, line, 2)
 
     return [Token(Types.KEYWORD, Keywords.GOTO), Token(Types.LOCATION, split[1])]
 
 def parse_input (line_number, line, variables):
     variable = line.split()[1:]
     if len(variable) > 1:
-        raise InvalidNumberOfArguments(line_number, line, len(variable), 1)
+        raise InvalidNumberOfArguments(line_number, line, 1)
 
     token = tokenise(variable[0], variables)
 
@@ -149,7 +153,7 @@ def parse_set (line, variables):
     split = line.split(maxsplit=2)
     rhs = tokenise(split[2], variables)
     variable = split[1]
-    variables[variable] = rhs[0]
+    variables[variable] = None
     lhs = tokenise(variable, variables)
 
     return [Token(Types.KEYWORD, Keywords.SET)] + lhs + rhs

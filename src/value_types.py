@@ -6,6 +6,7 @@ class Types(Enum):
     VARIABLE = "<var>"
     KEYWORD = "<keyword>"
     LOCATION = "<location>"
-    OPERATOR = "<operator>"
+    ARITHMETIC_OPERATOR = "<arithmetic_operator>"
+    COMPARISON_OPERATOR = "<comparison_operator>"
     EXPRESSION_END = "<expr_end>"
     EXPRESSION_START = "<expr_start>"

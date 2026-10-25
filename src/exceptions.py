@@ -29,8 +29,8 @@ class InvalidConditionException(Exception):
 class InvalidNumberOfArguments(Exception):
     """Exception raised for functions with an invalid number of arguments error scenarios."""
 
-    def __init__(self, line_number: int, line: str, arguments: int, expected: int):
-        self.message = f"Expected number of arguments {arguments} does not equal expected {expected} at line {line_number}: {line}"
+    def __init__(self, line_number: int, line: str, expected: int):
+        self.message = f"Number of arguments does not equal expected number of arguements ({expected}) at line {line_number}: {line}"
         super().__init__(self.message)
 
 class InvalidVariableName(Exception):
@@ -57,8 +57,8 @@ class IllegalTypeOperation(Exception):
 class IllegalStringOperation(Exception):
     """Exception raised for illegal operation on strings error scenarios."""
 
-    def __init__(self, expression: str):
-        self.message = f"Illegal operation between strings: {expression}"
+    def __init__(self, line_number: int):
+        self.message = f"Illegal operation between strings on line {line_number}"
         super().__init__(self.message)
 
 class SetUsedOnNonVariable(Exception):
