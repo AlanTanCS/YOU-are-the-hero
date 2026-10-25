@@ -1,4 +1,4 @@
-from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, IllegalTypeOperation, VariableUnset
+from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression
 from syntax import Keywords, ComparisonOperators, ArithmeticOperators
 from token import Token
 from value_types import Types
