@@ -39,7 +39,7 @@ def handle_if_then(context: LineContext):
         return handle_keyword(context)
 
 def handle_goto(context: LineContext):
-    return context.story.node_table[context.line[0].value]
+    return context.story.scene_info.node_table[context.line[0].value]
 
 def handle_input(context: LineContext):
     player_input = input()

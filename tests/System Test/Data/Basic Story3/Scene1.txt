@@ -1,0 +1,47 @@
+NODE setup
+    PRINT "Setup: This is the first Node"
+    PRINT -2
+    PRINT "Setup: That was testing an integer"
+
+NODE intro
+    PRINT "Intro: Hello"
+    PRINT "Intro: This is the node after setup"
+    PRINT "Intro: There is a decision coming up"
+
+    //SET variable (10)
+    SET variable 10
+    SET test 19
+    SET health (1000 +(20 + 10 + (10 + 30) - test) + (10-20) + 100 - 10 + variable)
+
+    PRINT health
+    SET variable "."
+    PRINT ("HI" +(" THIS" + "  IS" + (" AN" + " EXPRESSION") + " I") + (" AM"+" TESTING") + " OK" + variable + " Thanks" + variable)
+
+NODE windingpath
+    PRINT "Winding Path: Where do you want to go the intro (1) cave (2) or mountain (3)"
+    INPUT choice
+    IF choice == "1" THEN GOTO intro
+    IF choice == "2" THEN GOTO cave
+    IF choice == "3" THEN GOTO mountain
+    PRINT "Please enter a valid choice"
+    GOTO windingpath
+
+NODE cave
+    PRINT "Cave: Hello again"
+    PRINT "Cave: You are in the cave now"
+    PRINT "Cave: Its very dark and spooky here next is the mountain..."
+
+NODE mountain
+    PRINT "Mountain: Mountain time!"
+    PRINT "Mountain: I dont know what to write anymore"
+    PRINT "Mountain: Potato"
+
+NODE scene2
+    PRINT "Scene: These are just"
+    PRINT "Scene: Extra"
+    PRINT "Scene: Scenes just for completeness"
+
+NODE test
+    PRINT "Test: Again extra"
+    PRINT "Test: Time to test an integer!"
+    PRINT "END"

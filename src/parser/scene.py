@@ -1,4 +1,4 @@
-from exceptions import SyntaxException, DuplicateNodeException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression
+from exceptions import ExceptionContext, SyntaxException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, DuplicateNodeException
 from syntax import Keywords, ComparisonOperators, ArithmeticOperators
 from token import Token
 from value_types import Types
@@ -76,7 +76,7 @@ def tokenise(line, variables):
 
         return out
 
-def parse_statement(line, line_number, variables):
+def parse_scene_statement(line, line_number, variables, exception_context):
     enum_value = Keywords(line.split()[0])
     
     result = line
@@ -86,7 +86,7 @@ def parse_statement(line, line_number, variables):
     if enum_value == Keywords.PRINT:
         result = parse_print(line_number, line, variables)
     if enum_value == Keywords.IF:
-        result = parse_if_then(line_number, line, variables)
+        result = parse_if_then(line_number, line, variables, exception_context)
     if enum_value == Keywords.GOTO:
         result = parse_goto(line_number, line)
     if enum_value == Keywords.INPUT:
@@ -110,8 +110,10 @@ def parse_print(line_number, line, variables):
 
     return[Token(Types.KEYWORD, Keywords.PRINT)] + token_list
 
-def parse_if_then(line_number, line, variables):
+def parse_if_then(line_number, line, variables, exception_context):
     split = line.split()
+    if (Keywords.THEN.value) not in split:
+        raise SyntaxException(exception_context)
     condition = split[1:split.index(Keywords.THEN.value)]
     branch = split[split.index(Keywords.THEN.value) + 1:]
     if len(condition) != 3:
@@ -128,7 +130,7 @@ def parse_if_then(line_number, line, variables):
     if branch[0] not in Keywords:
         raise SyntaxException(line_number, line)
         
-    return [Token(Types.KEYWORD, Keywords.IF)] + condition + [Token(Types.KEYWORD, Keywords.THEN)] + parse_statement(" ".join(branch), line_number, variables)
+    return [Token(Types.KEYWORD, Keywords.IF)] + condition + [Token(Types.KEYWORD, Keywords.THEN)] + parse_scene_statement(" ".join(branch), line_number, variables, exception_context)
 
 def parse_goto(line_number, line):
     split = line.split()
@@ -157,35 +159,3 @@ def parse_set (line, variables):
     lhs = tokenise(variable, variables)
 
     return [Token(Types.KEYWORD, Keywords.SET)] + lhs + rhs
-
-def parse_story(story_path: str):
-
-    # Create lookup for each line
-    line_indexes = {}
-    line_indexes["EOF"] = 0
-
-    variables = {}
-
-    with open(story_path) as story_data:
-        for i, line in enumerate(story_data):
-            line = line.strip()
-            if line == '' or line[:2] == "//":
-                continue
-            if line.split()[0] not in Keywords:
-                raise SyntaxException(i + 1, line)
-            line_indexes[i] = line
-        
-            line_indexes["EOF"] = max(line_indexes["EOF"], i) 
-
-
-    node_table = create_node_table(line_indexes)
-
-    # Parse each line
-    for line_number, line in line_indexes.items():
-        if line_number == "EOF":
-            continue
-        result = parse_statement(line, line_number, variables)
-
-        line_indexes[line_number] = result
-
-    return line_indexes, node_table, variables

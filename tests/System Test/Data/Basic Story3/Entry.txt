@@ -1,0 +1,3 @@
+SCENE_LIST [scene1, scene3]
+
+//COMBAT_LIST [goblin, orc, troll]

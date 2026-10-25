@@ -1,0 +1,9 @@
+PRINT "THIS IS SCENE2!!!"
+
+NODE testing
+    PRINT "PRESS 1 to finish"
+    INPUT playerinp
+    IF playerinp == 1 THEN GOTO end
+    GOTO testing
+
+NODE end

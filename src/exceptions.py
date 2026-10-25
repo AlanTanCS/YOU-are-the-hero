@@ -1,8 +1,23 @@
+from enum import Enum
+import syntax
+
+class ExceptionContext():
+    def __init__(self, file_path: str = None, line_number: str = None, line: str = None):
+        self.file_path = file_path
+        self.line_number = line_number
+        self.line = line
+
 class SyntaxException(Exception):
     """Exception raised for syntax error scenarios."""
 
-    def __init__(self, line_number: int, line: str):
-        self.message = f"Syntax error at line {line_number}, unrecognised syntax: {line}"
+    def __init__(self, exception_context: ExceptionContext, keyword_type: Enum = None):
+        print(type(keyword_type))
+        if keyword_type == syntax.Keywords:
+            self.message = f"Syntax error at line {exception_context.line_number}, entry syntax not used: {exception_context.line}"
+        elif keyword_type == syntax.EntryKeywords:
+            self.message = f"Syntax error at line {exception_context.line_number}, scene syntax not used: {exception_context.line}"
+        else:
+            self.message = f"Syntax error at line {exception_context.line_number}, unrecognised syntax: {exception_context.line}"
         super().__init__(self.message)
 
 class DuplicateNodeException(Exception):
@@ -15,8 +30,13 @@ class DuplicateNodeException(Exception):
 class InvalidTypeException(Exception):
     """Exception raised for invalid type error scenarios."""
 
-    def __init__(self, line_number: int, line: str):
-        self.message = f"Invalid type at line {line_number}: {line}"
+    def __init__(self, exception_context: ExceptionContext, allowed_types: dict):
+        result = ""
+        if len(allowed_types) > 1:
+            result = ", ".join(allowed_types[:-1]) + " or " + allowed_types[-1]
+        elif allowed_types:
+            result = allowed_types[0]
+        self.message = f"Invalid type at line {exception_context.line_number}, expected: {result} at {exception_context.line}"
         super().__init__(self.message)
 
 class InvalidConditionException(Exception):
@@ -73,4 +93,11 @@ class VariableUnset(Exception):
 
     def __init__(self, line_number: int):
         self.message = f"Cannot use non SET variables at line {line_number}"
+        super().__init__(self.message)
+
+class AlreadyDeclared(Exception):
+    """Exception raised for attempt to use an unset variable error scenarios."""
+
+    def __init__(self, exception_context: ExceptionContext, keyword: Enum):
+        self.message = f"{keyword.value} already declared, cannot declare a second time at line {exception_context.line_number}: {exception_context.line}"
         super().__init__(self.message)

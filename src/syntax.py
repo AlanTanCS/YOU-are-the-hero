@@ -9,6 +9,10 @@ class Keywords(Enum):
     INPUT = "INPUT"
     SET = "SET"
 
+class EntryKeywords(Enum):
+    SCENE_LIST = "SCENE_LIST"
+    COMBAT_LIST = "COMBAT_LIST"
+
 class ComparisonOperators(Enum):
     EQUALS = "=="
     GREATER = ">"

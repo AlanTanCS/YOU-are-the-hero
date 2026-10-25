@@ -1,13 +1,45 @@
-from parser import parse_story
-from story import Story
+from parser import parse_entry_point
+from story import Story, SceneInfo
 from story_engine import StoryEngine
 
-SAVE_PATH = r"tests/System Test/Data/Basic Story2.txt"
+import sys
+import os
+
+def handle_arguments():
+    path = ""
+    if len(sys.argv) > 2:
+        print(r"YOU-are-the-hero: error: too many arguments")
+        print(r"Usage: YOU-are-the-hero [<entry-file>]")
+    elif len(sys.argv) == 2:
+        path = sys.argv[1]
+    else:
+        path = r"entry.txt"
+
+    return os.path.join(os.getcwd(), path)
+
+def find_entry_file(file_path):
+    if not os.path.isfile(file_path):
+        print(f"YOU-are-the-hero: error: entry file '{file_path}' not found")
+        print(r"Usage: YOU-are-the-hero [<entry-file>]")
+        print(r"Specify a valid entry file path or create 'entry.txt' in the working directory.")
+        sys.exit()
+    return file_path
 
 def main():
-    line_indexes, node_table, variables = parse_story(SAVE_PATH)
-    story = Story(line_indexes, node_table)
-    story_engine = StoryEngine(story, variables)
+    entry = handle_arguments()
+    SAVE_PATH = find_entry_file(entry)
+    scenes, combats = parse_entry_point(SAVE_PATH)
+    initial_scene = ""
+    if len(scenes) > 0:
+        initial_scene = scenes[0]
+    else:
+        print("exit")
+        sys.exit()
+
+    story = Story(scenes, combats)
+    story_engine = StoryEngine(story)
+    # set the initial scene
+    story_engine.set_current_file(initial_scene)
     story_engine.run()
 
 if __name__ == "__main__":
