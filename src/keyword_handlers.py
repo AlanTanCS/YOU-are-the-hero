@@ -5,6 +5,8 @@ from syntax import Keywords
 from token import Token
 from value_types import Types
 
+from helper.print_line_index import print_line_index
+
 def handle_print(context: LineContext):
     argument = context.line[0]
     if argument.type == Types.INTEGER or argument.type == Types.STRING:
@@ -39,7 +41,10 @@ def handle_if_then(context: LineContext):
         return handle_keyword(context)
 
 def handle_goto(context: LineContext):
-    return context.story.scene_info.node_table[context.line[0].value]
+    if context.line[0].value == Keywords.NODE:
+        return context.story.scene_info.node_table[context.line[1].value]
+    if context.line[0].value == Keywords.SCENE:
+        return context.line[1].value
 
 def handle_input(context: LineContext):
     player_input = input()

@@ -1,4 +1,4 @@
-from exceptions import ExceptionContext, SyntaxException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, DuplicateNodeException
+from exceptions import ExceptionContext, SyntaxException, InvalidNumberOfArguments, InvalidTypeException, InvalidVariableName, InvalidExpression, DuplicateNodeException, LocationNotFound
 from syntax import Keywords, ComparisonOperators, ArithmeticOperators
 from token import Token
 from value_types import Types
@@ -76,7 +76,7 @@ def tokenise(line, variables):
 
         return out
 
-def parse_scene_statement(line, line_number, variables, exception_context):
+def parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes: list, combats: list):
     enum_value = Keywords(line.split()[0])
     
     result = line
@@ -86,9 +86,9 @@ def parse_scene_statement(line, line_number, variables, exception_context):
     if enum_value == Keywords.PRINT:
         result = parse_print(line_number, line, variables)
     if enum_value == Keywords.IF:
-        result = parse_if_then(line_number, line, variables, exception_context)
+        result = parse_if_then(line_number, line, variables, node_table, exception_context, scenes, combats)
     if enum_value == Keywords.GOTO:
-        result = parse_goto(line_number, line)
+        result = parse_goto(line_number, line, node_table, exception_context, scenes, combats)
     if enum_value == Keywords.INPUT:
         result = parse_input(line_number, line, variables)
     if enum_value == Keywords.SET:
@@ -110,7 +110,7 @@ def parse_print(line_number, line, variables):
 
     return[Token(Types.KEYWORD, Keywords.PRINT)] + token_list
 
-def parse_if_then(line_number, line, variables, exception_context):
+def parse_if_then(line_number, line, variables, node_table, exception_context, scenes: list, combats: list):
     split = line.split()
     if (Keywords.THEN.value) not in split:
         raise SyntaxException(exception_context)
@@ -129,15 +129,27 @@ def parse_if_then(line_number, line, variables, exception_context):
     condition.insert(1, Token(Types.COMPARISON_OPERATOR, ComparisonOperators(operator)))
     if branch[0] not in Keywords:
         raise SyntaxException(line_number, line)
-        
-    return [Token(Types.KEYWORD, Keywords.IF)] + condition + [Token(Types.KEYWORD, Keywords.THEN)] + parse_scene_statement(" ".join(branch), line_number, variables, exception_context)
+    return [Token(Types.KEYWORD, Keywords.IF)] + condition + [Token(Types.KEYWORD, Keywords.THEN)] + parse_scene_statement(" ".join(branch), line_number, variables, node_table, exception_context, scenes, combats)
 
-def parse_goto(line_number, line):
+def parse_goto(line_number, line, node_table, exception_context, scenes, combats):
     split = line.split()
-    if len(split) != 2:
-        raise InvalidNumberOfArguments(line_number, line, 2)
-
-    return [Token(Types.KEYWORD, Keywords.GOTO), Token(Types.LOCATION, split[1])]
+    if len(split) == 3:
+        if split[1] == Keywords.NODE.value:
+            if split[2] not in node_table:
+                raise LocationNotFound(exception_context)
+            return [Token(Types.KEYWORD, Keywords.GOTO), Token(Types.KEYWORD, Keywords.NODE), Token(Types.LOCATION, split[2])]
+        if split[1] == Keywords.SCENE.value:
+            if split[2] not in scenes:
+                raise LocationNotFound(exception_context)
+            return [Token(Types.KEYWORD, Keywords.GOTO), Token(Types.KEYWORD, Keywords.SCENE), Token(Types.LOCATION, split[2])]
+        if split[1] == Keywords.COMBAT.value:
+            if split[2] not in combats:
+                raise LocationNotFound(exception_context)
+            return [Token(Types.KEYWORD, Keywords.GOTO), Token(Types.KEYWORD, Keywords.SCENE), Token(Types.LOCATION, split[2])]
+        else:
+            raise SyntaxException(exception_context)
+    else:
+        raise InvalidNumberOfArguments(line_number + 1, line, 3)
 
 def parse_input (line_number, line, variables):
     variable = line.split()[1:]

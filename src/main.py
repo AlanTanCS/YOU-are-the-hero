@@ -29,17 +29,8 @@ def main():
     entry = handle_arguments()
     SAVE_PATH = find_entry_file(entry)
     scenes, combats = parse_entry_point(SAVE_PATH)
-    initial_scene = ""
-    if len(scenes) > 0:
-        initial_scene = scenes[0]
-    else:
-        print("exit")
-        sys.exit()
-
     story = Story(scenes, combats)
     story_engine = StoryEngine(story)
-    # set the initial scene
-    story_engine.set_current_file(initial_scene)
     story_engine.run()
 
 if __name__ == "__main__":

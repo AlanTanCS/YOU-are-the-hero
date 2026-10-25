@@ -5,7 +5,7 @@ from .entry import parse_entry_statement
 
 import os
 
-def parse_scene(scene_path: str):
+def parse_scene(scene_path: str, scenes: list, combats: list):
 
     exception_context = ExceptionContext(scene_path)
     # Create lookup for each line
@@ -33,7 +33,7 @@ def parse_scene(scene_path: str):
         if line_number == "EOF":
             continue
         exception_context.line_number, exception_context.line = line_number + 1, line
-        result = parse_scene_statement(line, line_number, variables, exception_context)
+        result = parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes, combats)
 
         line_indexes[line_number] = result
 
@@ -78,8 +78,5 @@ def parse_entry_point(entry_path: str):
         path = os.path.join(os.getcwd(), f"{combat}.txt")
         if not os.path.isfile(path):
             raise FileNotFoundError(path)
-
-    scenes = {i: item for i, item in enumerate(scenes)}
-    combats = {i: item for i, item in enumerate(combats)}
 
     return scenes, combats

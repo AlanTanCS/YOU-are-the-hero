@@ -20,11 +20,11 @@ NODE intro
 NODE windingpath
     PRINT "Winding Path: Where do you want to go the intro (1) cave (2) or mountain (3)"
     INPUT choice
-    IF choice == "1" THEN GOTO intro
-    IF choice == "2" THEN GOTO cave
-    IF choice == "3" THEN GOTO mountain
+    IF choice == "1" THEN GOTO NODE intro
+    IF choice == "2" THEN GOTO NODE cave
+    IF choice == "3" THEN GOTO NODE mountain
     PRINT "Please enter a valid choice"
-    GOTO windingpath
+    GOTO NODE windingpath
 
 NODE cave
     PRINT "Cave: Hello again"
