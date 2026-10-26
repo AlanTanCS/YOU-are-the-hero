@@ -16,7 +16,7 @@ def parse_entry_statement(line: str, exception_context: ExceptionContext):
     if enum_value == EntryKeywords.COMBAT_LIST:
         combat_table = parse_scene_combat(line, exception_context)
     if enum_value == EntryKeywords.GLOBAL:
-        result = parse_global(line, exception_context)
+        result = parse_global(line)
 
     return scene_table, combat_table, result
 
