@@ -4,6 +4,7 @@ class Types(Enum):
     STRING = "<str>"
     INTEGER = "<int>"
     VARIABLE = "<var>"
+    GLOBAL_VARIABLE = "<global_var>"
     KEYWORD = "<keyword>"
     LOCATION = "<location>"
     ARITHMETIC_OPERATOR = "<arithmetic_operator>"

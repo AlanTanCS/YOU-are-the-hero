@@ -9,14 +9,13 @@ class StoryEngine:
     def __init__ (self, story: Story):
         self.loc = 0
         self.story = story
-        self.global_variables = {}
 
     def get_file_scene_info(self, file_name: str):
         file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
         if not os.path.isfile(file_path):
             raise FileNotFoundError(file_path)
 
-        line_indexes, node_table, variable_table = parse_scene(file_path, self.story.scenes, self.story.combats)
+        line_indexes, node_table, variable_table = parse_scene(file_path, self.story.scenes, self.story.combats, self.story.global_variables)
         scene_info = SceneInfo(line_indexes, node_table, variable_table)
         return scene_info
 
@@ -50,7 +49,7 @@ class StoryEngine:
     def handle_keyword(self, keyword: str, line: str) -> None:
         # keyword will be None if we're looking at a line thats empty
         if keyword:
-            new_loc = handle(LineContext(keyword, line, self.get_current_line_number(), self.story, self.story.scene_info.variable_table))
+            new_loc = handle(LineContext(keyword, line, self.get_current_line_number(), self.story, self.story.scene_info.variable_table, self.story.global_variables))
             if new_loc:
                 self.set_new_loc(new_loc)
 

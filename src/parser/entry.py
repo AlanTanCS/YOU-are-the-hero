@@ -31,10 +31,10 @@ def parse_scene_combat(line: str, exception_context: ExceptionContext):
 
     return scene_combats
 
-def parse_global(line: str, exception_context: ExceptionContext):
+def parse_global(line: str):
     split = line.split(maxsplit=2)
     variable = split[1]
-    rhs = tokenise(split[2], {})
-    lhs = tokenise(variable, {})
+    rhs = tokenise(split[2])
+    lhs = tokenise(variable)
 
     return [Token(Types.KEYWORD, EntryKeywords.GLOBAL)] + lhs + rhs

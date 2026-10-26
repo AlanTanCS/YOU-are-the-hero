@@ -5,7 +5,7 @@ from .entry import parse_entry_statement
 
 import os
 
-def parse_scene(scene_path: str, scenes: list, combats: list):
+def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: dict):
 
     exception_context = ExceptionContext(scene_path)
     # Create lookup for each line
@@ -35,7 +35,7 @@ def parse_scene(scene_path: str, scenes: list, combats: list):
         if line_number == "EOF":
             continue
         exception_context.line_number, exception_context.line = line_number + 1, line
-        result = parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes, combats)
+        result = parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes, combats, global_variables)
 
         line_indexes[line_number] = result
 

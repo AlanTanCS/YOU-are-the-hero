@@ -25,15 +25,13 @@ def determine_type(line):
             return None
         raise InvalidVariableName(line)
 
-def tokenise(line, variables):
+def tokenise(line):
     type = determine_type(line)
     if type == Types.STRING:
         return [Token(type, line[1:-1])]
     if type == Types.INTEGER:
         return [Token(type, line)]
     if type == Types.VARIABLE:
-        if line not in variables:
-                variables[line] = None
         return [Token(type, line)]
     if type == Types.EXPRESSION_START:
 
@@ -51,8 +49,6 @@ def tokenise(line, variables):
             if type == Types.STRING:
                 out.append(Token(type, element[1:-1]))
             elif type == Types.VARIABLE:
-                if line not in variables:
-                    variables[line] = None
                 out.append(Token(type, element))
             else:
                 out.append(Token(type, element))

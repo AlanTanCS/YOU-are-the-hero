@@ -7,13 +7,18 @@ from value_types import Types
 
 def handle_print(context: LineContext):
     argument = context.line[0]
+    # Add global variables onto local variables for calculations
+    var_table_copy = dict(context.variable_table)
+    var_table_copy.update(context.global_variables)
     if argument.type == Types.INTEGER or argument.type == Types.STRING:
         print(argument.value)
+    if argument.type == Types.GLOBAL_VARIABLE:
+        print(resolve_value(argument, var_table_copy).value)
     if argument.type == Types.VARIABLE:
-        print(resolve_value(argument, context.variable_table).value)
+        print(resolve_value(argument, var_table_copy).value)
     if argument.type == Types.EXPRESSION_START:
         try:
-            print(resolve_expression(context.line, context.variable_table).value)
+            print(resolve_expression(context.line, var_table_copy).value)
         except TypeError:
             raise IllegalStringOperation(context.loc)
         except NameError:
@@ -50,20 +55,31 @@ def handle_input(context: LineContext):
     handle_set(context)
 
 def handle_set(context: LineContext):
-    if context.line[0].type != Types.VARIABLE:
+    var_table_copy = dict(context.variable_table)
+    var_table_copy.update(context.global_variables)
+    if context.line[0].type != Types.VARIABLE and context.line[0].type != Types.GLOBAL_VARIABLE:
         raise SetUsedOnNonVariable(context.loc)
     if context.line[1].type != Types.EXPRESSION_START:
-        context.variable_table[context.line[0].value] = context.line[1]
+        resolved = resolve_value(context.line[1], var_table_copy)
+        if resolved == None:
+            raise VariableUnset(context.loc)
+        if context.line[0].value in context.global_variables:
+            context.global_variables[context.line[0].value] = resolved
+        else:
+            context.variable_table[context.line[0].value] = resolved
         return
 
     # we have an expression
     try:
-        result = resolve_expression(context.line[1:], context.variable_table)
+        result = resolve_expression(context.line[1:], var_table_copy)
     except TypeError:
         raise IllegalStringOperation(context.loc)
     except NameError:
         raise VariableUnset(context.loc)
-    context.variable_table[context.line[0].value] = result
+    if context.line[0].type == Types.VARIABLE:
+        context.variable_table[context.line[0].value] = result
+    else:
+        context.global_variables[context.line[0].value] = result
 
 keyword_table = {
     Keywords.PRINT: handle_print,
