@@ -1,5 +1,6 @@
+from initialise_global_variables import global_init
 from parser import parse_entry_point
-from story import Story, SceneInfo
+from story import Story
 from story_engine import StoryEngine
 
 import sys
@@ -28,8 +29,9 @@ def find_entry_file(file_path):
 def main():
     entry = handle_arguments()
     SAVE_PATH = find_entry_file(entry)
-    scenes, combats = parse_entry_point(SAVE_PATH)
-    story = Story(scenes, combats)
+    scenes, combats, global_variable_statements = parse_entry_point(SAVE_PATH)
+    global_variables = global_init(global_variable_statements)
+    story = Story(scenes, combats, global_variables)
     story_engine = StoryEngine(story)
     story_engine.run()
 

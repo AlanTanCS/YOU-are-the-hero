@@ -108,3 +108,10 @@ class LocationNotFound(Exception):
     def __init__(self, exception_context: ExceptionContext):
         self.message = f"Cannot find the location referenced on line {exception_context.line_number}: {exception_context.line}"
         super().__init__(self.message)
+
+class RedeclaredGlobal(Exception):
+    """Exception raised for attempt to use redeclared something that cannot be decalred again."""
+
+    def __init__(self, exception_context: ExceptionContext, variable: str):
+        self.message = f"Cannot declare global variable '{variable}', cannot declare a pre-existing local variable as GLOBAL on line {exception_context.line_number}: {exception_context.line}"
+        super().__init__(self.message)

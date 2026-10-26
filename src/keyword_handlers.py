@@ -5,8 +5,6 @@ from syntax import Keywords
 from token import Token
 from value_types import Types
 
-from helper.print_line_index import print_line_index
-
 def handle_print(context: LineContext):
     argument = context.line[0]
     if argument.type == Types.INTEGER or argument.type == Types.STRING:
@@ -72,7 +70,7 @@ keyword_table = {
     Keywords.IF: handle_if_then,
     Keywords.GOTO: handle_goto,
     Keywords.INPUT: handle_input,
-    Keywords.SET: handle_set
+    Keywords.SET: handle_set,
 }
 
 # Node is a special keyword and is handled in the parser when populating the table

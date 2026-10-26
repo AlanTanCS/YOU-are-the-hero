@@ -3,13 +3,13 @@ from line_context import LineContext
 from parser import parse_scene
 from story import Story, SceneInfo
 
-import sys
 import os
 
 class StoryEngine:
     def __init__ (self, story: Story):
         self.loc = 0
         self.story = story
+        self.global_variables = {}
 
     def get_file_scene_info(self, file_name: str):
         file_path = os.path.join(os.getcwd(), f"{file_name}.txt")

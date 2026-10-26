@@ -14,6 +14,7 @@ class Keywords(Enum):
 class EntryKeywords(Enum):
     SCENE_LIST = "SCENE_LIST"
     COMBAT_LIST = "COMBAT_LIST"
+    GLOBAL = "GLOBAL"
 
 class ComparisonOperators(Enum):
     EQUALS = "=="

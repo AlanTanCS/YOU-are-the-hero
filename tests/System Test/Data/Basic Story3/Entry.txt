@@ -1,3 +1,8 @@
+
+GLOBAL health 100
+GLOBAL expressiontest (100 + 200 + 300 + health)
+GLOBAL currenthealth 200
+
 SCENE_LIST [scene1, scene3]
 
 //COMBAT_LIST [goblin, orc, troll]

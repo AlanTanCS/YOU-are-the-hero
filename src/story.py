@@ -7,9 +7,10 @@ class SceneInfo():
         self.variable_table = variable_table
 
 class Story():
-    def __init__(self, scenes: list, combats: list, scene_info: SceneInfo = None):
+    def __init__(self, scenes: list, combats: list, global_variables: dict, scene_info: SceneInfo = None):
         self.scenes = scenes
         self.combats = combats
+        self.global_variables = global_variables
         self.scene_info = scene_info
         self.cached_scenes = scenes[::]
 
