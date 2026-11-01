@@ -1,5 +1,5 @@
 from syntax import ComparisonOperators, ArithmeticOperators
-from token import Token
+from story_token import Token
 from value_types import Types
 
 # Todo handle integer checks

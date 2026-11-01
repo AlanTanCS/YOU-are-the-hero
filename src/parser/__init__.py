@@ -17,24 +17,27 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
     with open(scene_path) as story_data:
         for i, line in enumerate(story_data):
             line = line.strip()
-            exception_context.line_number = i + 1
+            exception_context.line_number = str(i + 1)
             exception_context.line = line
             if line == '' or line[:2] == "//":
                 continue
             if line.split()[0] not in Keywords:
-                raise SyntaxException(exception_context)
-            line_indexes[i] = line
+                if line.split()[0] in EntryKeywords:
+                    raise SyntaxException(exception_context, EntryKeywords)
+                else:
+                    raise SyntaxException(exception_context)
+            line_indexes[i + 1] = line
         
-            line_indexes["EOF"] = max(line_indexes["EOF"], i) 
+            line_indexes["EOF"] = max(line_indexes["EOF"], i + 1)
 
 
-    node_table = create_node_table(line_indexes)
+    node_table = create_node_table(exception_context, line_indexes)
 
     # Parse each line
     for line_number, line in line_indexes.items():
         if line_number == "EOF":
             continue
-        exception_context.line_number, exception_context.line = line_number + 1, line
+        exception_context.line_number, exception_context.line = line_number, line
         result = parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes, combats, global_variables)
 
         line_indexes[line_number] = result
@@ -51,7 +54,7 @@ def parse_entry_point(entry_path: str):
 
     with open(entry_path) as story_data:
         for i, line in enumerate(story_data):
-            exception_context.line_number, exception_context.line = i + 1, line
+            exception_context.line_number, exception_context.line = i, line
             line = line.strip()
             if line == '' or line[:2] == "//":
                 continue
@@ -60,11 +63,11 @@ def parse_entry_point(entry_path: str):
                 raise SyntaxException(exception_context, Keywords)
             if line.split()[0] not in EntryKeywords:
                 raise SyntaxException(exception_context)
-            line_indexes[i] = line
+            line_indexes[i + 1] = line
 
     for line_number, line in line_indexes.items():
-        exception_context.line_number, exception_context.line = line_number + 1, line
-        scenes_res, combats_res, result = parse_entry_statement(line, exception_context)
+        exception_context.line_number, exception_context.line = line_number, line
+        scenes_res, combats_res, result = parse_entry_statement(exception_context, line)
         if scenes_res != [] and scenes != []:
             raise AlreadyDeclared(exception_context, EntryKeywords.SCENE_LIST)
         if combats_res != [] and combats != []:

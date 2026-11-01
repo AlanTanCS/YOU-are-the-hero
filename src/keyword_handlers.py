@@ -2,7 +2,7 @@ from exceptions import SetUsedOnNonVariable, VariableUnset, IllegalStringOperati
 from line_context import LineContext
 from operator_handlers import handle_comparison_operators, resolve_expression, resolve_value
 from syntax import Keywords
-from token import Token
+from story_token import Token
 from value_types import Types
 
 def handle_print(context: LineContext):

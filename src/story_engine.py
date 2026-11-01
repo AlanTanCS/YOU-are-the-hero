@@ -20,7 +20,7 @@ class StoryEngine:
         return scene_info
 
     def get_current_line_number(self) -> int:
-        return self.loc + 1
+        return self.loc
 
     def set_current_line_number(self, new_value: int) -> None:
         self.loc = new_value - 1
@@ -54,7 +54,7 @@ class StoryEngine:
                 self.set_new_loc(new_loc)
 
     def next_line(self) -> None | int:
-        if self.loc < self.story.scene_info.line_indexes["EOF"] + 1:
+        if self.loc < self.story.scene_info.line_indexes["EOF"]:
             self.loc += 1
         else:
             # End of file

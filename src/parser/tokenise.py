@@ -1,11 +1,11 @@
 from exceptions import InvalidVariableName, InvalidExpression
 from syntax import ArithmeticOperators
-from token import Token
+from story_token import Token
 from value_types import Types
 
 import re
 
-def determine_type(line):
+def determine_type(exception_context, line):
     if line[0] == '(':
         return Types.EXPRESSION_START
     if line[0] == ')':
@@ -23,10 +23,10 @@ def determine_type(line):
         if " " in line:
             # There are too many arguemnts
             return None
-        raise InvalidVariableName(line)
+        raise InvalidVariableName(exception_context, line)
 
-def tokenise(line):
-    type = determine_type(line)
+def tokenise(exception_context, line):
+    type = determine_type(exception_context, line)
     if type == Types.STRING:
         return [Token(type, line[1:-1])]
     if type == Types.INTEGER:
@@ -45,7 +45,7 @@ def tokenise(line):
         elements = re.findall(r'"[^"\n]*"|\(|\)|\+|-|\d+|[A-Za-z_]\w*', line)
         out = []
         for element in elements:
-            type = determine_type(element)
+            type = determine_type(exception_context, element)
             if type == Types.STRING:
                 out.append(Token(type, element[1:-1]))
             elif type == Types.VARIABLE:

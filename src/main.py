@@ -2,6 +2,7 @@ from initialise_global_variables import global_init
 from parser import parse_entry_point
 from story import Story
 from story_engine import StoryEngine
+from exceptions import StoryException
 
 import sys
 import os
@@ -34,6 +35,12 @@ def main():
     story = Story(scenes, combats, global_variables)
     story_engine = StoryEngine(story)
     story_engine.run()
+    # print(story.scene_info.line_indexes)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except StoryException as exception:
+        RED = "\033[91m"
+        RESET = "\033[0m"
+        print(f"{RED}{exception}{RESET}")

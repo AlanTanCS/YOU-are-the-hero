@@ -1,10 +1,10 @@
 from exceptions import ExceptionContext, InvalidTypeException
 from syntax import EntryKeywords
-from token import Token
+from story_token import Token
 from value_types import Types
 from .tokenise import tokenise
 
-def parse_entry_statement(line: str, exception_context: ExceptionContext):
+def parse_entry_statement(exception_context: ExceptionContext, line: str):
     enum_value = EntryKeywords(line.split()[0])
     
     scene_table = []
@@ -12,15 +12,15 @@ def parse_entry_statement(line: str, exception_context: ExceptionContext):
     result = None
 
     if enum_value == EntryKeywords.SCENE_LIST:
-        scene_table = parse_scene_combat(line, exception_context)
+        scene_table = parse_scene_combat(exception_context, line)
     if enum_value == EntryKeywords.COMBAT_LIST:
-        combat_table = parse_scene_combat(line, exception_context)
+        combat_table = parse_scene_combat(exception_context, line)
     if enum_value == EntryKeywords.GLOBAL:
-        result = parse_global(line)
+        result = parse_global(exception_context, line)
 
     return scene_table, combat_table, result
 
-def parse_scene_combat(line: str, exception_context: ExceptionContext):
+def parse_scene_combat(exception_context: ExceptionContext, line: str):
     scene_combat_list = line.split(maxsplit=1)
     if scene_combat_list[1][0] != '[' or scene_combat_list[1][-1] != ']':
         raise InvalidTypeException(exception_context, ["list"])
@@ -31,10 +31,10 @@ def parse_scene_combat(line: str, exception_context: ExceptionContext):
 
     return scene_combats
 
-def parse_global(line: str):
+def parse_global(exception_context: ExceptionContext, line: str):
     split = line.split(maxsplit=2)
     variable = split[1]
-    rhs = tokenise(split[2])
-    lhs = tokenise(variable)
+    rhs = tokenise(exception_context, split[2])
+    lhs = tokenise(exception_context, variable)
 
     return [Token(Types.KEYWORD, EntryKeywords.GLOBAL)] + lhs + rhs
