@@ -1,9 +1,14 @@
 from exceptions import variable_exception
-from line_context import LineContext
-from operator_handlers import handle_comparison_operators, resolve_expression, resolve_value
-from syntax import Keywords
-from story_token import Token
-from value_types import Types
+from model.line_context import LineContext
+from model.story_token import Token
+from model.syntax import Keywords
+from model.value_types import Types
+from runtime.operator_handlers import (
+    handle_comparison_operators,
+    resolve_expression,
+    resolve_value,
+)
+
 
 def handle_print(context: LineContext):
     argument = context.line[0]
@@ -17,7 +22,12 @@ def handle_print(context: LineContext):
     if argument.type == Types.VARIABLE:
         print(resolve_value(argument, var_table_copy, context.exception_context).value)
     if argument.type == Types.EXPRESSION_START:
-        print(resolve_expression(context.line, var_table_copy, context.exception_context).value)
+        print(
+            resolve_expression(
+                context.line, var_table_copy, context.exception_context
+            ).value
+        )
+
 
 def handle_if_then(context: LineContext):
     condition = []
@@ -25,18 +35,25 @@ def handle_if_then(context: LineContext):
     for token_pos in range(len(context.line)):
         if context.line[token_pos].value == Keywords.THEN:
             condition = context.line[:token_pos]
-            branch = context.line[token_pos + 1:]
+            branch = context.line[token_pos + 1 :]
             break
 
     result = False
     for i in range(len(condition)):
         if condition[i].type == Types.COMPARISON_OPERATOR:
-            result = handle_comparison_operators(condition[i], condition[:i], condition[i + 1:], context.variable_table, context.exception_context)
+            result = handle_comparison_operators(
+                condition[i],
+                condition[:i],
+                condition[i + 1 :],
+                context.variable_table,
+                context.exception_context,
+            )
 
     if result:
         context.keyword = branch[0]
         context.line = branch
         return handle_keyword(context)
+
 
 def handle_goto(context: LineContext):
     if context.line[0].value == Keywords.NODE:
@@ -44,18 +61,27 @@ def handle_goto(context: LineContext):
     if context.line[0].value == Keywords.SCENE:
         return context.line[1].value
 
+
 def handle_input(context: LineContext):
     player_input = input()
     context.line.append(Token(Types.STRING, player_input))
     handle_set(context)
 
+
 def handle_set(context: LineContext):
     var_table_copy = dict(context.variable_table)
     var_table_copy.update(context.global_variables)
-    if context.line[0].type != Types.VARIABLE and context.line[0].type != Types.GLOBAL_VARIABLE:
-        raise variable_exception.InvalidAssignmentTargetException(context.exception_context)
+    if (
+        context.line[0].type != Types.VARIABLE
+        and context.line[0].type != Types.GLOBAL_VARIABLE
+    ):
+        raise variable_exception.InvalidAssignmentTargetException(
+            context.exception_context
+        )
     if context.line[1].type != Types.EXPRESSION_START:
-        resolved = resolve_value(context.line[1], var_table_copy, context.exception_context)
+        resolved = resolve_value(
+            context.line[1], var_table_copy, context.exception_context
+        )
         if context.line[0].value in context.global_variables:
             context.global_variables[context.line[0].value] = resolved
         else:
@@ -63,11 +89,14 @@ def handle_set(context: LineContext):
         return
 
     # we have an expression
-    result = resolve_expression(context.line[1:], var_table_copy, context.exception_context)
+    result = resolve_expression(
+        context.line[1:], var_table_copy, context.exception_context
+    )
     if context.line[0].type == Types.VARIABLE:
         context.variable_table[context.line[0].value] = result
     else:
         context.global_variables[context.line[0].value] = result
+
 
 keyword_table = {
     Keywords.PRINT: handle_print,
@@ -76,6 +105,7 @@ keyword_table = {
     Keywords.INPUT: handle_input,
     Keywords.SET: handle_set,
 }
+
 
 # Node is a special keyword and is handled in the parser when populating the table
 def handle_keyword(context: LineContext) -> None:

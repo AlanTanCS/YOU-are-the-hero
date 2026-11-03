@@ -1,9 +1,10 @@
-from exceptions import variable_exception, syntax_exception
-from syntax import ArithmeticOperators
-from story_token import Token
-from value_types import Types
-
 import re
+
+from exceptions import syntax_exception, variable_exception
+from model.story_token import Token
+from model.syntax import ArithmeticOperators
+from model.value_types import Types
+
 
 def split_statement(line):
     arguments = []
@@ -14,9 +15,9 @@ def split_statement(line):
     for character in line:
         if character == '"':
             in_string = not in_string
-        elif not in_string and character == '(':
+        elif not in_string and character == "(":
             parentheses_depth += 1
-        elif not in_string and character == ')':
+        elif not in_string and character == ")":
             parentheses_depth -= 1
 
         if character.isspace() and parentheses_depth == 0 and not in_string:
@@ -31,25 +32,27 @@ def split_statement(line):
 
     return arguments
 
+
 def determine_type(exception_context, line):
-    if line[0] == '(':
+    if line[0] == "(":
         return Types.EXPRESSION_START
-    if line[0] == ')':
+    if line[0] == ")":
         return Types.EXPRESSION_END
     if line in ArithmeticOperators:
         return Types.ARITHMETIC_OPERATOR
     if line[0] == '"' and line[-1] == '"':
         return Types.STRING
     try:
-        if int(line):
-            return Types.INTEGER
-    except:
+        int(line)
+        return Types.INTEGER
+    except ValueError:
         if line.isalnum():
             return Types.VARIABLE
         if " " in line:
             # There are too many arguemnts
             return None
         raise variable_exception.InvalidVariableNameException(exception_context, line)
+
 
 def tokenise(exception_context, line):
     type = determine_type(exception_context, line)
@@ -60,11 +63,10 @@ def tokenise(exception_context, line):
     if type == Types.VARIABLE:
         return [Token(type, line)]
     if type == Types.EXPRESSION_START:
-
         # Check if expression is valid by checking parenthesis
         parentheses_only = re.sub(r"[^()]", "", line)
-        while re.search(r'\(\)', parentheses_only):
-            parentheses_only = re.sub(r'\(\)', '', parentheses_only)
+        while re.search(r"\(\)", parentheses_only):
+            parentheses_only = re.sub(r"\(\)", "", parentheses_only)
         if parentheses_only:
             raise syntax_exception.InvalidExpressionException(exception_context)
 

@@ -1,9 +1,11 @@
 import linecache
 
-class ExceptionContext():
+
+class ExceptionContext:
     def __init__(self, file_path: str = None, line_number: str = None):
         self.file_path = file_path
         self.line_number = line_number
+
 
 class StoryException(Exception):
     """Base class for exceptions raised by YOU-are-the-hero."""
@@ -12,8 +14,10 @@ class StoryException(Exception):
         self.message = f"{type(self).__name__}: {message}"
         super().__init__(self.message)
 
+
 def get_line(file: str, line_number: int):
     return linecache.getline(file, line_number).strip()
+
 
 def report_error_info(exception_context: ExceptionContext):
     err_msg = f"\nIn file: {exception_context.file_path}"

@@ -8,6 +8,10 @@ NODE intro
     PRINT "Intro: This is the node after setup"
     PRINT "Intro: There is a decision coming up"
 
+    SET testehushefiuh 0
+
+    PRINT testehushefiuh
+
     //SET variable (10)
     SET currenthealth 10
     SET variable 10

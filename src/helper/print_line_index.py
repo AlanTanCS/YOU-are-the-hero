@@ -17,6 +17,6 @@ def print_line_index(line_index):
         if line_index:
             out = f" {line_index.type} {line_index.value}"
         else:
-            out = f" None"
+            out = " None"
 
     print(out)

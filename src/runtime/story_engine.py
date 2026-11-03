@@ -1,13 +1,14 @@
-from keyword_handlers import handle_keyword as handle
-from exceptions import ExceptionContext
-from line_context import LineContext
-from parser import parse_scene
-from story import Story, SceneInfo
-
 import os
 
+from exceptions import ExceptionContext
+from model.line_context import LineContext
+from model.story import SceneInfo, Story
+from parser import parse_scene
+from runtime.keyword_handlers import handle_keyword as handle
+
+
 class StoryEngine:
-    def __init__ (self, story: Story):
+    def __init__(self, story: Story):
         self.loc = 0
         self.story = story
 
@@ -16,7 +17,12 @@ class StoryEngine:
         if not os.path.isfile(file_path):
             raise FileNotFoundError(file_path)
 
-        line_indexes, node_table, variable_table = parse_scene(file_path, self.story.scenes, self.story.combats, self.story.global_variables)
+        line_indexes, node_table, variable_table = parse_scene(
+            file_path,
+            self.story.scenes,
+            self.story.combats,
+            self.story.global_variables,
+        )
         scene_info = SceneInfo(line_indexes, node_table, variable_table, file_path)
         return scene_info
 
@@ -28,7 +34,7 @@ class StoryEngine:
 
     def get_current_line(self) -> str | None:
         return self.story.get_line(self.loc)
-    
+
     def get_current_keyword(self) -> str:
         current_line = self.get_current_line()
         if current_line:
@@ -50,8 +56,19 @@ class StoryEngine:
     def handle_keyword(self, keyword: str, line: str) -> None:
         # keyword will be None if we're looking at a line thats empty
         if keyword:
-            exception_context = ExceptionContext(self.story.scene_info.file_path, self.get_current_line_number())
-            new_loc = handle(LineContext(keyword, line, exception_context, self.story, self.story.scene_info.variable_table, self.story.global_variables))
+            exception_context = ExceptionContext(
+                self.story.scene_info.file_path, self.get_current_line_number()
+            )
+            new_loc = handle(
+                LineContext(
+                    keyword,
+                    line,
+                    exception_context,
+                    self.story,
+                    self.story.scene_info.variable_table,
+                    self.story.global_variables,
+                )
+            )
             if new_loc:
                 self.set_new_loc(new_loc)
 
@@ -74,7 +91,9 @@ class StoryEngine:
 
     def validate_story(self):
         for scene in range(len(self.story.scenes)):
-            self.story.cached_scenes[scene] = self.get_file_scene_info(self.story.scenes[scene])
+            self.story.cached_scenes[scene] = self.get_file_scene_info(
+                self.story.scenes[scene]
+            )
         self.story.scene_info = None
 
     def run(self):

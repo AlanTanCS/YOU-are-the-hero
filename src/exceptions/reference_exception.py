@@ -1,7 +1,9 @@
 from . import ExceptionContext, StoryException, report_error_info
 
+
 class ReferenceException(StoryException):
     """Base class for reference exceptions raised by YOU-are-the-hero."""
+
 
 class LocationNotFoundException(ReferenceException):
     """Exception raised for when a GOTO is used for a location that cannot be found."""

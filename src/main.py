@@ -1,11 +1,12 @@
-from initialise_global_variables import global_init
-from parser import parse_entry_point
-from story import Story
-from story_engine import StoryEngine
-from exceptions import StoryException
-
-import sys
 import os
+import sys
+
+from exceptions import StoryException
+from model.story import Story
+from parser import parse_entry_point
+from runtime.initialise_global_variables import global_init
+from runtime.story_engine import StoryEngine
+
 
 def handle_arguments():
     path = ""
@@ -19,13 +20,17 @@ def handle_arguments():
 
     return os.path.join(os.getcwd(), path)
 
+
 def find_entry_file(file_path):
     if not os.path.isfile(file_path):
         print(f"YOU-are-the-hero: error: entry file '{file_path}' not found")
         print(r"Usage: YOU-are-the-hero [<entry-file>]")
-        print(r"Specify a valid entry file path or create 'entry.txt' in the working directory.")
+        print(
+            r"Specify a valid entry file path or create 'entry.txt' in the working directory."
+        )
         sys.exit()
     return file_path
+
 
 def main():
     entry = handle_arguments()
@@ -35,6 +40,7 @@ def main():
     story = Story(scenes, combats, global_variables)
     story_engine = StoryEngine(story)
     story_engine.run()
+
 
 if __name__ == "__main__":
     try:

@@ -1,5 +1,7 @@
 class LineContext:
-    def __init__(self, keyword, line, exception_context, story, variable_table, global_variables):
+    def __init__(
+        self, keyword, line, exception_context, story, variable_table, global_variables
+    ):
         self.keyword = keyword
         self.line = line
         self.story = story

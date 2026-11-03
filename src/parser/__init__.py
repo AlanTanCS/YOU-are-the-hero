@@ -1,9 +1,11 @@
-from exceptions import ExceptionContext, syntax_exception, declaration_exception
-from syntax import Keywords, EntryKeywords
-from .scene import parse_scene_statement, create_node_table
-from .entry import parse_entry_statement
-
 import os
+
+from exceptions import ExceptionContext, declaration_exception, syntax_exception
+from model.syntax import EntryKeywords, Keywords
+
+from .entry import parse_entry_statement
+from .scene import create_node_table, parse_scene_statement
+
 
 def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: dict):
 
@@ -18,17 +20,20 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
         for i, line in enumerate(story_data):
             line = line.strip()
             exception_context.line_number = str(i + 1)
-            if line == '' or line[:2] == "//":
+            if line == "" or line[:2] == "//":
                 continue
             if line.split()[0] not in Keywords:
                 if line.split()[0] in EntryKeywords:
-                    raise syntax_exception.InvalidKeywordException(exception_context, line.split()[0])
+                    raise syntax_exception.InvalidKeywordException(
+                        exception_context, line.split()[0]
+                    )
                 else:
-                    raise syntax_exception.UnknownKeywordException(exception_context, line.split()[0])
+                    raise syntax_exception.UnknownKeywordException(
+                        exception_context, line.split()[0]
+                    )
             line_indexes[i + 1] = line
-        
-            line_indexes["EOF"] = max(line_indexes["EOF"], i + 1)
 
+            line_indexes["EOF"] = max(line_indexes["EOF"], i + 1)
 
     node_table = create_node_table(exception_context, line_indexes)
 
@@ -37,11 +42,21 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
         if line_number == "EOF":
             continue
         exception_context.line_number = line_number
-        result = parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes, combats, global_variables)
+        result = parse_scene_statement(
+            line,
+            line_number,
+            variables,
+            node_table,
+            exception_context,
+            scenes,
+            combats,
+            global_variables,
+        )
 
         line_indexes[line_number] = result
 
     return line_indexes, node_table, variables
+
 
 def parse_entry_point(entry_path: str):
     exception_context = ExceptionContext(entry_path)
@@ -55,10 +70,12 @@ def parse_entry_point(entry_path: str):
         for i, line in enumerate(story_data):
             exception_context.line_number = i
             line = line.strip()
-            if line == '' or line[:2] == "//":
+            if line == "" or line[:2] == "//":
                 continue
             if line.split()[0] in Keywords:
-                raise syntax_exception.InvalidKeywordException(exception_context, Keywords)
+                raise syntax_exception.InvalidKeywordException(
+                    exception_context, Keywords
+                )
             if line.split()[0] not in EntryKeywords:
                 raise syntax_exception.InvalidKeywordException(exception_context)
             line_indexes[i + 1] = line
@@ -67,9 +84,13 @@ def parse_entry_point(entry_path: str):
         exception_context.line_number = line_number
         scenes_res, combats_res, result = parse_entry_statement(exception_context, line)
         if scenes_res != [] and scenes != []:
-            raise declaration_exception.AlreadyDeclaredException(exception_context, EntryKeywords.SCENE_LIST)
+            raise declaration_exception.AlreadyDeclaredException(
+                exception_context, EntryKeywords.SCENE_LIST
+            )
         if combats_res != [] and combats != []:
-            raise declaration_exception.AlreadyDeclaredException(exception_context, EntryKeywords.COMBAT_LIST)
+            raise declaration_exception.AlreadyDeclaredException(
+                exception_context, EntryKeywords.COMBAT_LIST
+            )
         scenes += scenes_res
         combats += combats_res
 
