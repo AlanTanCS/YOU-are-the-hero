@@ -1,4 +1,4 @@
-from exceptions import ExceptionContext, InvalidTypeException
+from exceptions import ExceptionContext, type_exception
 from syntax import EntryKeywords
 from story_token import Token
 from value_types import Types
@@ -23,7 +23,7 @@ def parse_entry_statement(exception_context: ExceptionContext, line: str):
 def parse_scene_combat(exception_context: ExceptionContext, line: str):
     scene_combat_list = line.split(maxsplit=1)
     if scene_combat_list[1][0] != '[' or scene_combat_list[1][-1] != ']':
-        raise InvalidTypeException(exception_context, ["list"])
+        raise type_exception.UnexpectedTypeException(exception_context, ["list"])
     scene_combats = scene_combat_list[1][1:-1]
     scene_combats = scene_combats.split(",")
     for scene_combat in range(len(scene_combats)):

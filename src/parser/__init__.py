@@ -1,4 +1,4 @@
-from exceptions import ExceptionContext, SyntaxException, AlreadyDeclared
+from exceptions import ExceptionContext, syntax_exception, declaration_exception
 from syntax import Keywords, EntryKeywords
 from .scene import parse_scene_statement, create_node_table
 from .entry import parse_entry_statement
@@ -18,14 +18,13 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
         for i, line in enumerate(story_data):
             line = line.strip()
             exception_context.line_number = str(i + 1)
-            exception_context.line = line
             if line == '' or line[:2] == "//":
                 continue
             if line.split()[0] not in Keywords:
                 if line.split()[0] in EntryKeywords:
-                    raise SyntaxException(exception_context, EntryKeywords)
+                    raise syntax_exception.InvalidKeywordException(exception_context, line.split()[0])
                 else:
-                    raise SyntaxException(exception_context)
+                    raise syntax_exception.UnknownKeywordException(exception_context, line.split()[0])
             line_indexes[i + 1] = line
         
             line_indexes["EOF"] = max(line_indexes["EOF"], i + 1)
@@ -37,7 +36,7 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
     for line_number, line in line_indexes.items():
         if line_number == "EOF":
             continue
-        exception_context.line_number, exception_context.line = line_number, line
+        exception_context.line_number = line_number
         result = parse_scene_statement(line, line_number, variables, node_table, exception_context, scenes, combats, global_variables)
 
         line_indexes[line_number] = result
@@ -50,33 +49,32 @@ def parse_entry_point(entry_path: str):
     scenes = []
     combats = []
     line_indexes = {}
-    global_variable_statements = []
+    global_variable_statements = {}
 
     with open(entry_path) as story_data:
         for i, line in enumerate(story_data):
-            exception_context.line_number, exception_context.line = i, line
+            exception_context.line_number = i
             line = line.strip()
             if line == '' or line[:2] == "//":
                 continue
             if line.split()[0] in Keywords:
-                exception_context.line = line
-                raise SyntaxException(exception_context, Keywords)
+                raise syntax_exception.InvalidKeywordException(exception_context, Keywords)
             if line.split()[0] not in EntryKeywords:
-                raise SyntaxException(exception_context)
+                raise syntax_exception.InvalidKeywordException(exception_context)
             line_indexes[i + 1] = line
 
     for line_number, line in line_indexes.items():
-        exception_context.line_number, exception_context.line = line_number, line
+        exception_context.line_number = line_number
         scenes_res, combats_res, result = parse_entry_statement(exception_context, line)
         if scenes_res != [] and scenes != []:
-            raise AlreadyDeclared(exception_context, EntryKeywords.SCENE_LIST)
+            raise declaration_exception.AlreadyDeclaredException(exception_context, EntryKeywords.SCENE_LIST)
         if combats_res != [] and combats != []:
-            raise AlreadyDeclared(exception_context, EntryKeywords.COMBAT_LIST)
+            raise declaration_exception.AlreadyDeclaredException(exception_context, EntryKeywords.COMBAT_LIST)
         scenes += scenes_res
         combats += combats_res
 
         if result:
-            global_variable_statements.append(result)
+            global_variable_statements[line_number] = result
 
     for scene in scenes:
         path = os.path.join(os.getcwd(), f"{scene}.txt")

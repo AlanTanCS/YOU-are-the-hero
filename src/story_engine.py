@@ -1,4 +1,5 @@
 from keyword_handlers import handle_keyword as handle
+from exceptions import ExceptionContext
 from line_context import LineContext
 from parser import parse_scene
 from story import Story, SceneInfo
@@ -16,7 +17,7 @@ class StoryEngine:
             raise FileNotFoundError(file_path)
 
         line_indexes, node_table, variable_table = parse_scene(file_path, self.story.scenes, self.story.combats, self.story.global_variables)
-        scene_info = SceneInfo(line_indexes, node_table, variable_table)
+        scene_info = SceneInfo(line_indexes, node_table, variable_table, file_path)
         return scene_info
 
     def get_current_line_number(self) -> int:
@@ -49,7 +50,8 @@ class StoryEngine:
     def handle_keyword(self, keyword: str, line: str) -> None:
         # keyword will be None if we're looking at a line thats empty
         if keyword:
-            new_loc = handle(LineContext(keyword, line, self.get_current_line_number(), self.story, self.story.scene_info.variable_table, self.story.global_variables))
+            exception_context = ExceptionContext(self.story.scene_info.file_path, self.get_current_line_number())
+            new_loc = handle(LineContext(keyword, line, exception_context, self.story, self.story.scene_info.variable_table, self.story.global_variables))
             if new_loc:
                 self.set_new_loc(new_loc)
 

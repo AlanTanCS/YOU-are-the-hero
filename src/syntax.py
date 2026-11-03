@@ -1,13 +1,13 @@
 from enum import Enum
 
 class Keywords(Enum):
-    NODE = "NODE"
     PRINT = "PRINT"
     IF = "IF"
     THEN = "THEN"
     GOTO = "GOTO"
     INPUT = "INPUT"
     SET = "SET"
+    NODE = "NODE"
     SCENE = "SCENE"
     COMBAT = "COMBAT"
 

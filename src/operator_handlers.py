@@ -1,8 +1,10 @@
+from exceptions import ExceptionContext, type_exception, variable_exception
 from syntax import ComparisonOperators, ArithmeticOperators
 from story_token import Token
 from value_types import Types
 
-# Todo handle integer checks
+from helper.print_line_index import print_line_index
+
 def handle_equals(lhs, rhs):
     return lhs.value == rhs.value
 
@@ -12,12 +14,18 @@ def handle_greater(lhs, rhs):
 def handle_less(lhs, rhs):
     return lhs.value < rhs.value
 
-def handle_arithmetic(lhs, rhs):
-    if lhs.type == Types.INTEGER and rhs.type == Types.INTEGER:
-        return Token(Types.INTEGER, str(int(lhs.value) + int(rhs.value)))
-    if lhs.type == Types.STRING and rhs.type == Types.STRING:
-        return Token(Types.STRING, lhs.value + rhs.value)
-    raise TypeError()
+def handle_arithmetic(lhs, rhs, sign, exception_context):
+    if sign.value == ArithmeticOperators.ADD:
+        if lhs.type == Types.INTEGER and rhs.type == Types.INTEGER:
+            return Token(Types.INTEGER, str(int(lhs.value) + int(rhs.value)))
+        if lhs.type == Types.STRING and rhs.type == Types.STRING:
+            return Token(Types.STRING, lhs.value + rhs.value)
+
+    elif sign.value == ArithmeticOperators.SUB:
+        if lhs.type == Types.INTEGER and rhs.type == Types.INTEGER:
+            return Token(Types.INTEGER, str(int(lhs.value) - int(rhs.value)))
+
+    raise type_exception.UnsupportedOperationException(exception_context, sign.value.value, lhs.type.value, rhs.type.value)
 
 operator_table = {
     ComparisonOperators.EQUALS: handle_equals,
@@ -27,54 +35,41 @@ operator_table = {
     ArithmeticOperators.SUB: handle_arithmetic
 }
 
-def handle_comparison_operators(operator, lhs, rhs, variable_table):
-    lhs = resolve_value(lhs[0], variable_table)
-    rhs = resolve_value(rhs[0], variable_table)
+def handle_comparison_operators(operator, lhs, rhs, variable_table, exception_context):
+    lhs = resolve_value(lhs[0], variable_table, exception_context)
+    rhs = resolve_value(rhs[0], variable_table, exception_context)
     return operator_table[operator.value](lhs, rhs)
 
-def resolve_value(variable, variable_table):
-    if variable == None:
-        return None
-
+def resolve_value(variable, variable_table, exception_context):
     if variable.type != Types.VARIABLE:
-        return variable
+            return variable
 
-    return resolve_value(variable_table[variable.value], variable_table)
+    if variable.value not in variable_table:
+        raise variable_exception.VariableNotSetException(exception_context, variable.value)
 
-def resolve_expression(expression: str, variable_table: dict):
+    return variable_table[variable.value]
 
+def resolve_expression(expression: list, variable_table: dict, exception_context: ExceptionContext):
     sign = ArithmeticOperators.ADD
     result = None
     for token in expression:
         if token.type == Types.ARITHMETIC_OPERATOR:
-            sign = token.value
+            sign = token
         if token.type == Types.INTEGER and result:
-            result = handle_arithmetic(result, Token(Types.INTEGER, sign + token.value if sign == ArithmeticOperators.SUB.value else token.value))
+            result = handle_arithmetic(result, token, sign, exception_context)
         if token.type == Types.VARIABLE and result:
-            resolved_var = resolve_value(token, variable_table)
-            if not resolved_var:
-                raise NameError()
-            if resolved_var.type == Types.STRING and sign == ArithmeticOperators.SUB:
-                raise TypeError()
-            result = handle_arithmetic(result, Token(resolved_var.type, sign + resolved_var.value if sign == ArithmeticOperators.SUB.value else resolved_var.value))
+            resolved_var = resolve_value(token, variable_table, exception_context)
+            result = handle_arithmetic(result, resolved_var, sign, exception_context)
         if token.type == Types.STRING and result:
-            if sign == ArithmeticOperators.SUB.value:
-                raise TypeError()
-            result = handle_arithmetic(result, token)
+            result = handle_arithmetic(result, token, sign, exception_context)
 
         # get first value
         if token.type == Types.INTEGER and not result:
             result = Token(Types.INTEGER, sign + token.value if sign == ArithmeticOperators.SUB.value else token.value)
         if token.type == Types.STRING and not result:
-            if sign == ArithmeticOperators.SUB.value:
-                raise TypeError()
             result = Token(Types.STRING, token.value)
         if token.type == Types.VARIABLE and not result:
-            resolved_var = resolve_value(token, variable_table)
-            if not resolved_var:
-                raise NameError()
-            if resolved_var.type == Types.STRING and sign == ArithmeticOperators.SUB:
-                raise TypeError()
+            resolved_var = resolve_value(token, variable_table, exception_context)
             result = Token(resolved_var.type, sign + resolved_var.value if sign == ArithmeticOperators.SUB.value else resolved_var.value)
 
     return result

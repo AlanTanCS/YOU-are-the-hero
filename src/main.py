@@ -29,13 +29,12 @@ def find_entry_file(file_path):
 
 def main():
     entry = handle_arguments()
-    SAVE_PATH = find_entry_file(entry)
-    scenes, combats, global_variable_statements = parse_entry_point(SAVE_PATH)
-    global_variables = global_init(global_variable_statements)
+    ENTRY_FILE = find_entry_file(entry)
+    scenes, combats, global_variable_statements = parse_entry_point(ENTRY_FILE)
+    global_variables = global_init(global_variable_statements, ENTRY_FILE)
     story = Story(scenes, combats, global_variables)
     story_engine = StoryEngine(story)
     story_engine.run()
-    # print(story.scene_info.line_indexes)
 
 if __name__ == "__main__":
     try:

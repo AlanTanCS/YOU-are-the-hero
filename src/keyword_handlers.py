@@ -1,4 +1,4 @@
-from exceptions import SetUsedOnNonVariable, VariableUnset, IllegalStringOperation
+from exceptions import variable_exception
 from line_context import LineContext
 from operator_handlers import handle_comparison_operators, resolve_expression, resolve_value
 from syntax import Keywords
@@ -13,16 +13,11 @@ def handle_print(context: LineContext):
     if argument.type == Types.INTEGER or argument.type == Types.STRING:
         print(argument.value)
     if argument.type == Types.GLOBAL_VARIABLE:
-        print(resolve_value(argument, var_table_copy).value)
+        print(resolve_value(argument, var_table_copy, context.exception_context).value)
     if argument.type == Types.VARIABLE:
-        print(resolve_value(argument, var_table_copy).value)
+        print(resolve_value(argument, var_table_copy, context.exception_context).value)
     if argument.type == Types.EXPRESSION_START:
-        try:
-            print(resolve_expression(context.line, var_table_copy).value)
-        except TypeError:
-            raise IllegalStringOperation(context.loc)
-        except NameError:
-            raise VariableUnset(context.loc)
+        print(resolve_expression(context.line, var_table_copy, context.exception_context).value)
 
 def handle_if_then(context: LineContext):
     condition = []
@@ -36,7 +31,7 @@ def handle_if_then(context: LineContext):
     result = False
     for i in range(len(condition)):
         if condition[i].type == Types.COMPARISON_OPERATOR:
-            result = handle_comparison_operators(condition[i], condition[:i], condition[i + 1:], context.variable_table)
+            result = handle_comparison_operators(condition[i], condition[:i], condition[i + 1:], context.variable_table, context.exception_context)
 
     if result:
         context.keyword = branch[0]
@@ -58,11 +53,9 @@ def handle_set(context: LineContext):
     var_table_copy = dict(context.variable_table)
     var_table_copy.update(context.global_variables)
     if context.line[0].type != Types.VARIABLE and context.line[0].type != Types.GLOBAL_VARIABLE:
-        raise SetUsedOnNonVariable(context.loc)
+        raise variable_exception.InvalidAssignmentTargetException(context.exception_context)
     if context.line[1].type != Types.EXPRESSION_START:
-        resolved = resolve_value(context.line[1], var_table_copy)
-        if resolved == None:
-            raise VariableUnset(context.loc)
+        resolved = resolve_value(context.line[1], var_table_copy, context.exception_context)
         if context.line[0].value in context.global_variables:
             context.global_variables[context.line[0].value] = resolved
         else:
@@ -70,12 +63,7 @@ def handle_set(context: LineContext):
         return
 
     # we have an expression
-    try:
-        result = resolve_expression(context.line[1:], var_table_copy)
-    except TypeError:
-        raise IllegalStringOperation(context.loc)
-    except NameError:
-        raise VariableUnset(context.loc)
+    result = resolve_expression(context.line[1:], var_table_copy, context.exception_context)
     if context.line[0].type == Types.VARIABLE:
         context.variable_table[context.line[0].value] = result
     else:

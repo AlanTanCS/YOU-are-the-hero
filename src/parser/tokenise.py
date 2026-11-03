@@ -1,9 +1,35 @@
-from exceptions import InvalidVariableName, InvalidExpression
+from exceptions import variable_exception, syntax_exception
 from syntax import ArithmeticOperators
 from story_token import Token
 from value_types import Types
 
 import re
+
+def split_statement(line):
+    arguments = []
+    current = []
+    parentheses_depth = 0
+    in_string = False
+
+    for character in line:
+        if character == '"':
+            in_string = not in_string
+        elif not in_string and character == '(':
+            parentheses_depth += 1
+        elif not in_string and character == ')':
+            parentheses_depth -= 1
+
+        if character.isspace() and parentheses_depth == 0 and not in_string:
+            if current:
+                arguments.append("".join(current))
+                current = []
+        else:
+            current.append(character)
+
+    if current:
+        arguments.append("".join(current))
+
+    return arguments
 
 def determine_type(exception_context, line):
     if line[0] == '(':
@@ -23,7 +49,7 @@ def determine_type(exception_context, line):
         if " " in line:
             # There are too many arguemnts
             return None
-        raise InvalidVariableName(exception_context, line)
+        raise variable_exception.InvalidVariableNameException(exception_context, line)
 
 def tokenise(exception_context, line):
     type = determine_type(exception_context, line)
@@ -40,7 +66,7 @@ def tokenise(exception_context, line):
         while re.search(r'\(\)', parentheses_only):
             parentheses_only = re.sub(r'\(\)', '', parentheses_only)
         if parentheses_only:
-            raise InvalidExpression(line)
+            raise syntax_exception.InvalidExpressionException(exception_context)
 
         elements = re.findall(r'"[^"\n]*"|\(|\)|\+|-|\d+|[A-Za-z_]\w*', line)
         out = []
@@ -50,6 +76,8 @@ def tokenise(exception_context, line):
                 out.append(Token(type, element[1:-1]))
             elif type == Types.VARIABLE:
                 out.append(Token(type, element))
+            elif type == Types.ARITHMETIC_OPERATOR:
+                out.append(Token(type, ArithmeticOperators(element)))
             else:
                 out.append(Token(type, element))
 

@@ -1,15 +1,16 @@
-from enum import Enum
 import linecache
-import syntax
 
 class ExceptionContext():
-    def __init__(self, file_path: str = None, line_number: str = None, line: str = None):
+    def __init__(self, file_path: str = None, line_number: str = None):
         self.file_path = file_path
         self.line_number = line_number
-        self.line = line
 
 class StoryException(Exception):
     """Base class for exceptions raised by YOU-are-the-hero."""
+
+    def __init__(self, message: str):
+        self.message = f"{type(self).__name__}: {message}"
+        super().__init__(self.message)
 
 def get_line(file: str, line_number: int):
     return linecache.getline(file, line_number).strip()
@@ -19,8 +20,6 @@ def report_error_info(exception_context: ExceptionContext):
 
     if exception_context.line_number:
         err_msg += f"\nAt line {exception_context.line_number}"
-
-    if exception_context.line_number and exception_context.line:
-        err_msg += f": \'{get_line(exception_context.file_path, int(exception_context.line_number))}\'"
+        err_msg += f": '{get_line(exception_context.file_path, int(exception_context.line_number))}'"
 
     return err_msg

@@ -1,10 +1,11 @@
 from typing import overload
 
 class SceneInfo():
-    def __init__(self, line_indexes, node_table, variable_table):
+    def __init__(self, line_indexes, node_table, variable_table, file_path):
         self.line_indexes = line_indexes
         self.node_table = node_table
         self.variable_table = variable_table
+        self.file_path = file_path
 
 class Story():
     def __init__(self, scenes: list, combats: list, global_variables: dict, scene_info: SceneInfo = None):
