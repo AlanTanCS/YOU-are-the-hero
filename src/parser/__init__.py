@@ -1,6 +1,7 @@
 import os
 
 from exceptions import ExceptionContext, declaration_exception, syntax_exception
+from model.context import StatementParseContext
 from model.syntax import EntryKeywords, Keywords
 
 from .entry import parse_entry_statement
@@ -40,16 +41,17 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
     # Parse each line
     for line_number, line in line_indexes.items():
         exception_context.line_number = line_number
-        result = parse_scene_statement(
+        statement_parse_context = StatementParseContext(
+            exception_context,
             line,
             line_number,
             variables,
             node_table,
-            exception_context,
             scenes,
             combats,
             global_variables,
         )
+        result = parse_scene_statement(statement_parse_context)
 
         line_indexes[line_number] = result
 

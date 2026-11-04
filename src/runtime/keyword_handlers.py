@@ -1,4 +1,4 @@
-from model.line_context import LineContext
+from model.context import StatementExecutionContext
 from model.story_token import Token
 from model.syntax import Keywords
 from model.value_types import Types
@@ -9,7 +9,7 @@ from runtime.operator_handlers import (
 )
 
 
-def handle_print(context: LineContext):
+def handle_print(context: StatementExecutionContext):
     argument = context.line[0]
     # Add global variables onto local variables for calculations
     var_table_copy = dict(context.variable_table)
@@ -28,7 +28,7 @@ def handle_print(context: LineContext):
         )
 
 
-def handle_if_then(context: LineContext):
+def handle_if_then(context: StatementExecutionContext):
     condition = []
     branch = []
     for token_pos in range(len(context.line)):
@@ -54,20 +54,20 @@ def handle_if_then(context: LineContext):
         return handle_keyword(context)
 
 
-def handle_goto(context: LineContext):
+def handle_goto(context: StatementExecutionContext):
     if context.line[0].value == Keywords.NODE:
         return context.story.get_active_scene().node_table[context.line[1].value]
     if context.line[0].value == Keywords.SCENE:
         return context.line[1].value
 
 
-def handle_input(context: LineContext):
+def handle_input(context: StatementExecutionContext):
     player_input = input()
     context.line.append(Token(Types.STRING, player_input))
     handle_set(context)
 
 
-def handle_set(context: LineContext):
+def handle_set(context: StatementExecutionContext):
     var_table_copy = dict(context.variable_table)
     var_table_copy.update(context.global_variables)
     if context.line[1].type != Types.EXPRESSION_START:
@@ -100,7 +100,7 @@ keyword_table = {
 
 
 # Node is a special keyword and is handled in the parser when populating the table
-def handle_keyword(context: LineContext) -> None:
+def handle_keyword(context: StatementExecutionContext) -> None:
     keyword = context.keyword.value
     if keyword == Keywords.NODE:
         return

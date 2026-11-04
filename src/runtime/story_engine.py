@@ -1,7 +1,7 @@
 import os
 
 from exceptions import ExceptionContext
-from model.line_context import LineContext
+from model.context import StatementExecutionContext
 from model.story import SceneInfo, Story
 from model.story_token import Token
 from parser import parse_scene
@@ -65,7 +65,7 @@ class StoryEngine:
             self.story.get_active_scene().file_path, self.get_current_line_number()
         )
         new_loc = handle(
-            LineContext(
+            StatementExecutionContext(
                 exception_context,
                 keyword,
                 line,
