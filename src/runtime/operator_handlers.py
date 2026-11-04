@@ -93,6 +93,6 @@ def resolve_expression(
             )
 
     if result is None:
-        raise RuntimeError("Expression contains no value")
+        raise RuntimeError("Internal error, expression contains no value")
 
     return result
