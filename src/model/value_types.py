@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class Types(Enum):
+class Types(StrEnum):
     STRING = "<str>"
     INTEGER = "<int>"
     VARIABLE = "<var>"

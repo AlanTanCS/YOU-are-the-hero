@@ -1,9 +1,16 @@
+from dataclasses import dataclass
+from typing import Any
+
+from model.story_token import Token
+
+
+@dataclass
 class SceneInfo:
-    def __init__(self, line_indexes, node_table, variable_table, file_path):
-        self.line_indexes = line_indexes
-        self.node_table = node_table
-        self.variable_table = variable_table
-        self.file_path = file_path
+    line_indexes: dict[int, list[Token]]
+    end_line: int
+    node_table: dict[int, list[str]]
+    variable_table: dict[str, Any]
+    file_path: str
 
 
 class Story:
@@ -31,5 +38,5 @@ class Story:
             raise RuntimeError("Internal error, no active scene set right now.")
         return self.scene_info
 
-    def get_line(self, line_number: int) -> str:
-        return self.get_active_scene().line_indexes.get(line_number)
+    def get_line(self, line_number: int) -> list[Token]:
+        return self.get_active_scene().line_indexes.get(line_number, [])

@@ -12,7 +12,7 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
     exception_context = ExceptionContext(scene_path)
     # Create lookup for each line
     line_indexes = {}
-    line_indexes["EOF"] = 0
+    end_line = 0
 
     variables = {}
 
@@ -33,14 +33,12 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
                     )
             line_indexes[i + 1] = line
 
-            line_indexes["EOF"] = max(line_indexes["EOF"], i + 1)
+            end_line = max(end_line, i + 1)
 
     node_table = create_node_table(exception_context, line_indexes)
 
     # Parse each line
     for line_number, line in line_indexes.items():
-        if line_number == "EOF":
-            continue
         exception_context.line_number = line_number
         result = parse_scene_statement(
             line,
@@ -55,7 +53,7 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
 
         line_indexes[line_number] = result
 
-    return line_indexes, node_table, variables
+    return line_indexes, end_line, node_table, variables
 
 
 def parse_entry_point(entry_path: str):

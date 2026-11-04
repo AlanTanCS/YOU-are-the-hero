@@ -28,7 +28,7 @@ def handle_arithmetic(lhs, rhs, sign, exception_context):
             return Token(Types.INTEGER, str(int(lhs.value) - int(rhs.value)))
 
     raise type_exception.UnsupportedOperationException(
-        exception_context, sign.value.value, lhs.type.value, rhs.type.value
+        exception_context, sign.value, lhs.type, rhs.type
     )
 
 
@@ -47,7 +47,7 @@ def handle_comparison_operators(operator, lhs, rhs, variable_table, exception_co
     return operator_table[operator.value](lhs, rhs)
 
 
-def resolve_value(variable, variable_table, exception_context):
+def resolve_value(variable, variable_table, exception_context) -> Token:
     if variable.type != Types.VARIABLE:
         return variable
 
@@ -79,9 +79,7 @@ def resolve_expression(
         if token.type == Types.INTEGER and result is None:
             result = Token(
                 Types.INTEGER,
-                sign + token.value
-                if sign == ArithmeticOperators.SUB.value
-                else token.value,
+                sign + token.value if sign == ArithmeticOperators.SUB else token.value,
             )
         if token.type == Types.STRING and result is None:
             result = Token(Types.STRING, token.value)
@@ -90,7 +88,7 @@ def resolve_expression(
             result = Token(
                 resolved_var.type,
                 sign + resolved_var.value
-                if sign == ArithmeticOperators.SUB.value
+                if sign == ArithmeticOperators.SUB
                 else resolved_var.value,
             )
 

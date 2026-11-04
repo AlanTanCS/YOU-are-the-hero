@@ -28,6 +28,6 @@ class AlreadyDeclaredException(DeclarationException):
     """Exception raised for attempt to redeclare something that may only be declared once."""
 
     def __init__(self, exception_context: ExceptionContext, keyword: Enum):
-        self.message = f"Cannot redeclare {keyword.value} more than once"
+        self.message = f"Cannot redeclare {keyword} more than once"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)

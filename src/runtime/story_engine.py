@@ -3,6 +3,7 @@ import os
 from exceptions import ExceptionContext
 from model.line_context import LineContext
 from model.story import SceneInfo, Story
+from model.story_token import Token
 from parser import parse_scene
 from runtime.keyword_handlers import handle_keyword as handle
 
@@ -17,13 +18,15 @@ class StoryEngine:
         if not os.path.isfile(file_path):
             raise FileNotFoundError(file_path)
 
-        line_indexes, node_table, variable_table = parse_scene(
+        line_indexes, end_line, node_table, variable_table = parse_scene(
             file_path,
             self.story.scenes,
             self.story.combats,
             self.story.global_variables,
         )
-        scene_info = SceneInfo(line_indexes, node_table, variable_table, file_path)
+        scene_info = SceneInfo(
+            line_indexes, end_line, node_table, variable_table, file_path
+        )
         return scene_info
 
     def get_current_line_number(self) -> int:
@@ -32,10 +35,10 @@ class StoryEngine:
     def set_current_line_number(self, new_value: int) -> None:
         self.loc = new_value - 1
 
-    def get_current_line(self) -> str:
+    def get_current_line(self) -> list[Token]:
         return self.story.get_line(self.loc)
 
-    def get_current_keyword(self) -> str | None:
+    def get_current_keyword(self) -> Token | None:
         current_line = self.get_current_line()
         if current_line:
             return current_line[0]
@@ -53,7 +56,7 @@ class StoryEngine:
         self.loc = 0
         self.story.scene_info = scene_info
 
-    def handle_keyword(self, keyword: str | None, line: str) -> None:
+    def handle_keyword(self, keyword: Token | None, line: list[Token]) -> None:
         # keyword will be None if we're looking at a line thats empty
         if keyword is None:
             return
@@ -63,9 +66,9 @@ class StoryEngine:
         )
         new_loc = handle(
             LineContext(
+                exception_context,
                 keyword,
                 line,
-                exception_context,
                 self.story,
                 self.story.get_active_scene().variable_table,
                 self.story.global_variables,
@@ -75,7 +78,7 @@ class StoryEngine:
             self.set_new_loc(new_loc)
 
     def next_line(self) -> None | int:
-        if self.loc < self.story.get_active_scene().line_indexes["EOF"]:
+        if self.loc < self.story.get_active_scene().end_line:
             self.loc += 1
         else:
             # End of file

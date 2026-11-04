@@ -1,4 +1,10 @@
+from dataclasses import dataclass
+from typing import Any
+
+from model import value_types
+
+
+@dataclass
 class Token:
-    def __init__(self, type, value):
-        self.type = type
-        self.value = value
+    type: value_types.Types
+    value: Any

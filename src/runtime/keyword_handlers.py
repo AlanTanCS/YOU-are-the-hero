@@ -56,7 +56,7 @@ def handle_if_then(context: LineContext):
 
 def handle_goto(context: LineContext):
     if context.line[0].value == Keywords.NODE:
-        return context.story.scene_info.node_table[context.line[1].value]
+        return context.story.get_active_scene().node_table[context.line[1].value]
     if context.line[0].value == Keywords.SCENE:
         return context.line[1].value
 

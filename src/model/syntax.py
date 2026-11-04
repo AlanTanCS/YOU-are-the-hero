@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class Keywords(Enum):
+class Keywords(StrEnum):
     PRINT = "PRINT"
     IF = "IF"
     THEN = "THEN"
@@ -13,18 +13,18 @@ class Keywords(Enum):
     COMBAT = "COMBAT"
 
 
-class EntryKeywords(Enum):
+class EntryKeywords(StrEnum):
     SCENE_LIST = "SCENE_LIST"
     COMBAT_LIST = "COMBAT_LIST"
     GLOBAL = "GLOBAL"
 
 
-class ComparisonOperators(Enum):
+class ComparisonOperators(StrEnum):
     EQUALS = "=="
     GREATER = ">"
     LESS = "<"
 
 
-class ArithmeticOperators(Enum):
+class ArithmeticOperators(StrEnum):
     ADD = "+"
     SUB = "-"

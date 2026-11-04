@@ -1,10 +1,11 @@
 import linecache
+from dataclasses import dataclass
 
 
+@dataclass
 class ExceptionContext:
-    def __init__(self, file_path: str, line_number: int | None = None):
-        self.file_path = file_path
-        self.line_number = line_number
+    file_path: str
+    line_number: int | None = None
 
 
 class StoryException(Exception):
