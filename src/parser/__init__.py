@@ -19,13 +19,13 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
     with open(scene_path) as story_data:
         for i, line in enumerate(story_data):
             line = line.strip()
-            exception_context.line_number = str(i + 1)
+            exception_context.line_number = i + 1
             if line == "" or line[:2] == "//":
                 continue
             if line.split()[0] not in Keywords:
                 if line.split()[0] in EntryKeywords:
                     raise syntax_exception.InvalidKeywordException(
-                        exception_context, line.split()[0]
+                        exception_context, EntryKeywords(line.split()[0])
                     )
                 else:
                     raise syntax_exception.UnknownKeywordException(
@@ -68,16 +68,18 @@ def parse_entry_point(entry_path: str):
 
     with open(entry_path) as story_data:
         for i, line in enumerate(story_data):
-            exception_context.line_number = i
+            exception_context.line_number = i + 1
             line = line.strip()
             if line == "" or line[:2] == "//":
                 continue
             if line.split()[0] in Keywords:
                 raise syntax_exception.InvalidKeywordException(
-                    exception_context, Keywords
+                    exception_context, Keywords(line.split()[0])
                 )
             if line.split()[0] not in EntryKeywords:
-                raise syntax_exception.InvalidKeywordException(exception_context)
+                raise syntax_exception.UnknownKeywordException(
+                    exception_context, line.split()[0]
+                )
             line_indexes[i + 1] = line
 
     for line_number, line in line_indexes.items():

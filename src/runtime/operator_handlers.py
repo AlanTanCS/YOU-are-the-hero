@@ -60,8 +60,8 @@ def resolve_value(variable, variable_table, exception_context):
 
 
 def resolve_expression(
-    expression: list, variable_table: dict, exception_context: ExceptionContext
-):
+    expression: list[Token], variable_table: dict, exception_context: ExceptionContext
+) -> Token:
     sign = ArithmeticOperators.ADD
     result = None
     for token in expression:
@@ -76,16 +76,16 @@ def resolve_expression(
             result = handle_arithmetic(result, token, sign, exception_context)
 
         # get first value
-        if token.type == Types.INTEGER and not result:
+        if token.type == Types.INTEGER and result is None:
             result = Token(
                 Types.INTEGER,
                 sign + token.value
                 if sign == ArithmeticOperators.SUB.value
                 else token.value,
             )
-        if token.type == Types.STRING and not result:
+        if token.type == Types.STRING and result is None:
             result = Token(Types.STRING, token.value)
-        if token.type == Types.VARIABLE and not result:
+        if token.type == Types.VARIABLE and result is None:
             resolved_var = resolve_value(token, variable_table, exception_context)
             result = Token(
                 resolved_var.type,
@@ -93,5 +93,8 @@ def resolve_expression(
                 if sign == ArithmeticOperators.SUB.value
                 else resolved_var.value,
             )
+
+    if result is None:
+        raise RuntimeError("Expression contains no value")
 
     return result

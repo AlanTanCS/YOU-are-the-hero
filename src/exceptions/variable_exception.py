@@ -19,7 +19,7 @@ class InvalidVariableNameException(VariableException):
 class VariableNotSetException(VariableException):
     """Exception raised for attempt to use a variable that hasn't been assigned a value."""
 
-    def __init__(self, exception_context: int, variable: str):
+    def __init__(self, exception_context: ExceptionContext, variable: str):
         self.message = f"Variable '{variable}' has not been assigned a value"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)
@@ -28,7 +28,7 @@ class VariableNotSetException(VariableException):
 class InvalidAssignmentTargetException(VariableException):
     """Exception raised for attempt to set a non variable type."""
 
-    def __init__(self, exception_context: int):
-        self.message = f"Assignment target must be a valid variable"
+    def __init__(self, exception_context: ExceptionContext):
+        self.message = "Assignment target must be a valid variable"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)

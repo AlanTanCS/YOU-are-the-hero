@@ -8,7 +8,7 @@ class TypeException(StoryException):
 class UnexpectedTypeException(TypeException):
     """Exception raised for unexpected types."""
 
-    def __init__(self, exception_context: ExceptionContext, allowed_types: dict):
+    def __init__(self, exception_context: ExceptionContext, allowed_types: list[str]):
         result = ""
         if len(allowed_types) > 1:
             result = ", ".join(allowed_types[:-1]) + " or " + allowed_types[-1]

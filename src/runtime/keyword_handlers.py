@@ -1,4 +1,3 @@
-from exceptions import variable_exception
 from model.line_context import LineContext
 from model.story_token import Token
 from model.syntax import Keywords
@@ -71,13 +70,6 @@ def handle_input(context: LineContext):
 def handle_set(context: LineContext):
     var_table_copy = dict(context.variable_table)
     var_table_copy.update(context.global_variables)
-    if (
-        context.line[0].type != Types.VARIABLE
-        and context.line[0].type != Types.GLOBAL_VARIABLE
-    ):
-        raise variable_exception.InvalidAssignmentTargetException(
-            context.exception_context
-        )
     if context.line[1].type != Types.EXPRESSION_START:
         resolved = resolve_value(
             context.line[1], var_table_copy, context.exception_context

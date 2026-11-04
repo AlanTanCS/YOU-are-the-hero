@@ -5,6 +5,7 @@ from exceptions import (
     reference_exception,
     syntax_exception,
     type_exception,
+    variable_exception,
 )
 from model.story_token import Token
 from model.syntax import ComparisonOperators, Keywords
@@ -225,6 +226,10 @@ def parse_set(line, variables, exception_context, global_variables):
     variable = split[1]
     lhs = tokenise(exception_context, variable)
     rhs = tokenise(exception_context, split[2])
+
+    if lhs[0].type != Types.VARIABLE:
+        raise variable_exception.InvalidAssignmentTargetException(exception_context)
+
     if variable not in global_variables:
         variables[variable] = None
     else:

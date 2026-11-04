@@ -35,7 +35,7 @@ def parse_scene_combat(exception_context: ExceptionContext, line: str):
     return scene_combats
 
 
-def parse_global(exception_context: ExceptionContext, line: str):
+def parse_global(exception_context: ExceptionContext, line: str) -> list[Token]:
     split = line.split(maxsplit=2)
     variable = split[1]
     rhs = tokenise(exception_context, split[2])

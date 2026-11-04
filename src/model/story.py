@@ -1,6 +1,3 @@
-from typing import overload
-
-
 class SceneInfo:
     def __init__(self, line_indexes, node_table, variable_table, file_path):
         self.line_indexes = line_indexes
@@ -15,7 +12,7 @@ class Story:
         scenes: list,
         combats: list,
         global_variables: dict,
-        scene_info: SceneInfo = None,
+        scene_info: SceneInfo | None = None,
     ):
         self.scenes = scenes
         self.combats = combats
@@ -23,17 +20,16 @@ class Story:
         self.scene_info = scene_info
         self.cached_scenes = scenes[::]
 
-    @overload
-    def get_scene(self, scene_number: int) -> SceneInfo: ...
-
-    @overload
-    def get_scene(self, scene_name: str) -> SceneInfo: ...
-
     def get_scene(self, scene: int | str) -> SceneInfo:
         if isinstance(scene, int):
             return self.cached_scenes[scene]
 
         return self.cached_scenes[self.scenes.index(scene)]
 
-    def get_line(self, line_number: int) -> str | None:
-        return self.scene_info.line_indexes.get(line_number)
+    def get_active_scene(self) -> SceneInfo:
+        if self.scene_info is None:
+            raise RuntimeError("Internal error, no active scene set right now.")
+        return self.scene_info
+
+    def get_line(self, line_number: int) -> str:
+        return self.get_active_scene().line_indexes.get(line_number)

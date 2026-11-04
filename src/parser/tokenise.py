@@ -33,7 +33,7 @@ def split_statement(line):
     return arguments
 
 
-def determine_type(exception_context, line):
+def determine_type(exception_context, line) -> Types:
     if line[0] == "(":
         return Types.EXPRESSION_START
     if line[0] == ")":
@@ -49,19 +49,15 @@ def determine_type(exception_context, line):
         if line.isalnum():
             return Types.VARIABLE
         if " " in line:
-            # There are too many arguemnts
-            return None
+            # Couldn't determine type
+            raise syntax_exception.InvalidExpressionException(exception_context)
         raise variable_exception.InvalidVariableNameException(exception_context, line)
 
 
-def tokenise(exception_context, line):
+def tokenise(exception_context, line) -> list[Token]:
     type = determine_type(exception_context, line)
     if type == Types.STRING:
         return [Token(type, line[1:-1])]
-    if type == Types.INTEGER:
-        return [Token(type, line)]
-    if type == Types.VARIABLE:
-        return [Token(type, line)]
     if type == Types.EXPRESSION_START:
         # Check if expression is valid by checking parenthesis
         parentheses_only = re.sub(r"[^()]", "", line)
@@ -84,3 +80,5 @@ def tokenise(exception_context, line):
                 out.append(Token(type, element))
 
         return out
+    else:
+        return [Token(type, line)]

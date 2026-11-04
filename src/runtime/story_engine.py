@@ -32,10 +32,10 @@ class StoryEngine:
     def set_current_line_number(self, new_value: int) -> None:
         self.loc = new_value - 1
 
-    def get_current_line(self) -> str | None:
+    def get_current_line(self) -> str:
         return self.story.get_line(self.loc)
 
-    def get_current_keyword(self) -> str:
+    def get_current_keyword(self) -> str | None:
         current_line = self.get_current_line()
         if current_line:
             return current_line[0]
@@ -53,27 +53,29 @@ class StoryEngine:
         self.loc = 0
         self.story.scene_info = scene_info
 
-    def handle_keyword(self, keyword: str, line: str) -> None:
+    def handle_keyword(self, keyword: str | None, line: str) -> None:
         # keyword will be None if we're looking at a line thats empty
-        if keyword:
-            exception_context = ExceptionContext(
-                self.story.scene_info.file_path, self.get_current_line_number()
+        if keyword is None:
+            return
+
+        exception_context = ExceptionContext(
+            self.story.get_active_scene().file_path, self.get_current_line_number()
+        )
+        new_loc = handle(
+            LineContext(
+                keyword,
+                line,
+                exception_context,
+                self.story,
+                self.story.get_active_scene().variable_table,
+                self.story.global_variables,
             )
-            new_loc = handle(
-                LineContext(
-                    keyword,
-                    line,
-                    exception_context,
-                    self.story,
-                    self.story.scene_info.variable_table,
-                    self.story.global_variables,
-                )
-            )
-            if new_loc:
-                self.set_new_loc(new_loc)
+        )
+        if new_loc:
+            self.set_new_loc(new_loc)
 
     def next_line(self) -> None | int:
-        if self.loc < self.story.scene_info.line_indexes["EOF"]:
+        if self.loc < self.story.get_active_scene().line_indexes["EOF"]:
             self.loc += 1
         else:
             # End of file
