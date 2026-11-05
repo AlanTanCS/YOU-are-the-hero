@@ -21,10 +21,10 @@ def get_line(file: str, line_number: int) -> str:
 
 
 def report_error_info(exception_context: ExceptionContext) -> str:
-    err_msg = f"\nIn file: {exception_context.file_path}"
+    err_msg = f'\nFile "{exception_context.file_path}'
 
     if exception_context.line_number:
-        err_msg += f"\nAt line {exception_context.line_number}"
-        err_msg += f": '{get_line(exception_context.file_path, int(exception_context.line_number))}'"
+        err_msg += f':{exception_context.line_number}"'
+        err_msg += f"\nLine {exception_context.line_number}: '{get_line(exception_context.file_path, exception_context.line_number)}'"
 
     return err_msg
