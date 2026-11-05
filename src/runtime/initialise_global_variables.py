@@ -1,9 +1,12 @@
 from exceptions import ExceptionContext, variable_exception
+from model.story_token import Token
 from model.value_types import Types
 from runtime.operator_handlers import resolve_expression
 
 
-def global_init(global_variable_statements: dict, entry_file: str):
+def global_init(
+    global_variable_statements: dict[int, list[Token]], entry_file: str
+) -> dict[str, Token]:
     global_variables = {}
     for line_number, statement in global_variable_statements.items():
         exception_context = ExceptionContext(entry_file, line_number)

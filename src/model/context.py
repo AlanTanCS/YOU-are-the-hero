@@ -12,17 +12,15 @@ class StatementExecutionContext:
     keyword: Token
     line: list[Token]
     story: Story
-    variable_table: dict
-    global_variables: dict
+    variable_table: dict[str, Token]
+    global_variables: dict[str, Token]
 
 
 @dataclass
 class StatementParseContext:
     exception_context: ExceptionContext
     line: str
-    line_number: int
-    variables: dict
-    node_table: dict
-    scenes: list
-    combats: list
-    global_variables: dict
+    node_table: dict[str, int]
+    scenes: list[str]
+    combats: list[str]
+    global_variables: dict[str, Token]

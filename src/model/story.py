@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
 
 from model.story_token import Token
 
@@ -8,24 +7,24 @@ from model.story_token import Token
 class SceneInfo:
     line_indexes: dict[int, list[Token]]
     end_line: int
-    node_table: dict[int, list[str]]
-    variable_table: dict[str, Any]
+    node_table: dict[str, int]
     file_path: str
+    variable_table: dict[str, Token] = field(default_factory=dict)
 
 
 class Story:
     def __init__(
         self,
-        scenes: list,
-        combats: list,
-        global_variables: dict,
+        scenes: list[str],
+        combats: list[str],
+        global_variables: dict[str, Token],
         scene_info: SceneInfo | None = None,
-    ):
+    ) -> None:
         self.scenes = scenes
         self.combats = combats
         self.global_variables = global_variables
         self.scene_info = scene_info
-        self.cached_scenes = scenes[::]
+        self.cached_scenes = []
 
     def get_scene(self, scene: int | str) -> SceneInfo:
         if isinstance(scene, int):

@@ -12,7 +12,7 @@ NODE intro
 
     PRINT testehushefiuh
 
-    //SET variable (10)
+    SET variable (10)
     SET currenthealth 10
     SET variable 10
     SET health variable

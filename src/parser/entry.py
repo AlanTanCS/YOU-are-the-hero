@@ -6,12 +6,14 @@ from model.value_types import Types
 from .tokenise import tokenise
 
 
-def parse_entry_statement(exception_context: ExceptionContext, line: str):
+def parse_entry_statement(
+    exception_context: ExceptionContext, line: str
+) -> tuple[list[str], list[str], list[Token]]:
     enum_value = EntryKeywords(line.split()[0])
 
     scene_table = []
     combat_table = []
-    result = None
+    result = []
 
     if enum_value == EntryKeywords.SCENE_LIST:
         scene_table = parse_scene_combat(exception_context, line)
@@ -23,7 +25,7 @@ def parse_entry_statement(exception_context: ExceptionContext, line: str):
     return scene_table, combat_table, result
 
 
-def parse_scene_combat(exception_context: ExceptionContext, line: str):
+def parse_scene_combat(exception_context: ExceptionContext, line: str) -> list[str]:
     scene_combat_list = line.split(maxsplit=1)
     if scene_combat_list[1][0] != "[" or scene_combat_list[1][-1] != "]":
         raise type_exception.UnexpectedTypeException(exception_context, ["list"])

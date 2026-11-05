@@ -11,16 +11,16 @@ class ExceptionContext:
 class StoryException(Exception):
     """Base class for exceptions raised by YOU-are-the-hero."""
 
-    def __init__(self, message: str):
+    def __init__(self, message: str) -> None:
         self.message = f"{type(self).__name__}: {message}"
         super().__init__(self.message)
 
 
-def get_line(file: str, line_number: int):
+def get_line(file: str, line_number: int) -> str:
     return linecache.getline(file, line_number).strip()
 
 
-def report_error_info(exception_context: ExceptionContext):
+def report_error_info(exception_context: ExceptionContext) -> str:
     err_msg = f"\nIn file: {exception_context.file_path}"
 
     if exception_context.line_number:

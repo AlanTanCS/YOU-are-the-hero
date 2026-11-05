@@ -1,12 +1,12 @@
 import re
 
-from exceptions import syntax_exception, variable_exception
+from exceptions import ExceptionContext, syntax_exception, variable_exception
 from model.story_token import Token
 from model.syntax import ArithmeticOperators
 from model.value_types import Types
 
 
-def split_statement(line):
+def split_statement(line: str) -> list[str]:
     arguments = []
     current = []
     parentheses_depth = 0
@@ -33,7 +33,7 @@ def split_statement(line):
     return arguments
 
 
-def determine_type(exception_context, line) -> Types:
+def determine_type(exception_context: ExceptionContext, line: str) -> Types:
     if line[0] == "(":
         return Types.EXPRESSION_START
     if line[0] == ")":
@@ -49,12 +49,12 @@ def determine_type(exception_context, line) -> Types:
         if line.isalnum():
             return Types.VARIABLE
         if " " in line:
-            # Couldn't determine type
+            # Couldn't determine type - must be an invalid expression
             raise syntax_exception.InvalidExpressionException(exception_context)
         raise variable_exception.InvalidVariableNameException(exception_context, line)
 
 
-def tokenise(exception_context, line) -> list[Token]:
+def tokenise(exception_context: ExceptionContext, line: str) -> list[Token]:
     type = determine_type(exception_context, line)
     if type == Types.STRING:
         return [Token(type, line[1:-1])]

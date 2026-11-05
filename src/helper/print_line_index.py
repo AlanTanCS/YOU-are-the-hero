@@ -1,4 +1,7 @@
-def print_line_index(line_index):
+from model.story_token import Token
+
+
+def print_line_index(line_index: list[Token] | dict) -> None:
     if isinstance(line_index, list):
         out = ""
         for i in line_index:

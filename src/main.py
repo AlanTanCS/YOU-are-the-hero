@@ -8,7 +8,7 @@ from runtime.initialise_global_variables import global_init
 from runtime.story_engine import StoryEngine
 
 
-def handle_arguments():
+def handle_arguments() -> str:
     path = ""
     if len(sys.argv) > 2:
         print(r"YOU-are-the-hero: error: too many arguments")
@@ -21,7 +21,7 @@ def handle_arguments():
     return os.path.join(os.getcwd(), path)
 
 
-def find_entry_file(file_path):
+def find_entry_file(file_path: str) -> str:
     if not os.path.isfile(file_path):
         print(f"YOU-are-the-hero: error: entry file '{file_path}' not found")
         print(r"Usage: YOU-are-the-hero [<entry-file>]")
@@ -32,7 +32,7 @@ def find_entry_file(file_path):
     return file_path
 
 
-def main():
+def main() -> None:
     entry = handle_arguments()
     ENTRY_FILE = find_entry_file(entry)
     scenes, combats, global_variable_statements = parse_entry_point(ENTRY_FILE)

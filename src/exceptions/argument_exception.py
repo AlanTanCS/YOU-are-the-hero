@@ -8,7 +8,9 @@ class ArgumentException(StoryException):
 class InvalidNumberOfArgumentsException(ArgumentException):
     """Exception raised for functions with an invalid number of arguments."""
 
-    def __init__(self, exception_context: ExceptionContext, expected: int, actual: int):
+    def __init__(
+        self, exception_context: ExceptionContext, expected: int, actual: int
+    ) -> None:
         self.message = f"Expected {expected} arguments instead got {actual}"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)

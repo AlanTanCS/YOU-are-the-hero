@@ -9,24 +9,22 @@ from runtime.keyword_handlers import handle_keyword as handle
 
 
 class StoryEngine:
-    def __init__(self, story: Story):
+    def __init__(self, story: Story) -> None:
         self.loc = 0
         self.story = story
 
-    def get_file_scene_info(self, file_name: str):
+    def get_file_scene_info(self, file_name: str) -> SceneInfo:
         file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
         if not os.path.isfile(file_path):
             raise FileNotFoundError(file_path)
 
-        line_indexes, end_line, node_table, variable_table = parse_scene(
+        line_indexes, end_line, node_table = parse_scene(
             file_path,
             self.story.scenes,
             self.story.combats,
             self.story.global_variables,
         )
-        scene_info = SceneInfo(
-            line_indexes, end_line, node_table, variable_table, file_path
-        )
+        scene_info = SceneInfo(line_indexes, end_line, node_table, file_path)
         return scene_info
 
     def get_current_line_number(self) -> int:
@@ -45,14 +43,13 @@ class StoryEngine:
         else:
             return None
 
-    def set_new_loc(self, new_loc):
+    def set_new_loc(self, new_loc: int | str) -> None:
         if isinstance(new_loc, int):
             self.set_current_line_number(new_loc)
-            return
         else:
             self.set_scene(self.story.get_scene(new_loc))
 
-    def set_scene(self, scene_info):
+    def set_scene(self, scene_info: SceneInfo) -> None:
         self.loc = 0
         self.story.scene_info = scene_info
 
@@ -74,7 +71,7 @@ class StoryEngine:
                 self.story.global_variables,
             )
         )
-        if new_loc:
+        if new_loc is not None:
             self.set_new_loc(new_loc)
 
     def next_line(self) -> None | int:
@@ -85,23 +82,22 @@ class StoryEngine:
             self.loc = 0
             return -1
 
-    def run_scene(self):
+    def run_scene(self) -> int:
         while True:
             if self.step() == -1:
                 return -1
 
-    def step(self):
+    def step(self) -> None | int:
         self.handle_keyword(self.get_current_keyword(), self.get_current_line())
         return self.next_line()
 
-    def validate_story(self):
-        for scene in range(len(self.story.scenes)):
-            self.story.cached_scenes[scene] = self.get_file_scene_info(
-                self.story.scenes[scene]
-            )
+    def validate_story(self) -> None:
+        self.story.cached_scenes = [
+            self.get_file_scene_info(scene) for scene in self.story.scenes
+        ]
         self.story.scene_info = None
 
-    def run(self):
+    def run(self) -> None:
         self.validate_story()
 
         # initial scene

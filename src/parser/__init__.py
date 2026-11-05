@@ -2,20 +2,24 @@ import os
 
 from exceptions import ExceptionContext, declaration_exception, syntax_exception
 from model.context import StatementParseContext
+from model.story_token import Token
 from model.syntax import EntryKeywords, Keywords
 
 from .entry import parse_entry_statement
 from .scene import create_node_table, parse_scene_statement
 
 
-def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: dict):
+def parse_scene(
+    scene_path: str,
+    scenes: list[str],
+    combats: list[str],
+    global_variables: dict[str, Token],
+) -> tuple[dict[int, list[Token]], int, dict[str, int]]:
 
     exception_context = ExceptionContext(scene_path)
     # Create lookup for each line
     line_indexes = {}
     end_line = 0
-
-    variables = {}
 
     with open(scene_path) as story_data:
         for i, line in enumerate(story_data):
@@ -44,8 +48,6 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
         statement_parse_context = StatementParseContext(
             exception_context,
             line,
-            line_number,
-            variables,
             node_table,
             scenes,
             combats,
@@ -55,10 +57,12 @@ def parse_scene(scene_path: str, scenes: list, combats: list, global_variables: 
 
         line_indexes[line_number] = result
 
-    return line_indexes, end_line, node_table, variables
+    return line_indexes, end_line, node_table
 
 
-def parse_entry_point(entry_path: str):
+def parse_entry_point(
+    entry_path: str,
+) -> tuple[list[str], list[str], dict[int, list[Token]]]:
     exception_context = ExceptionContext(entry_path)
 
     scenes = []
@@ -96,7 +100,7 @@ def parse_entry_point(entry_path: str):
         scenes += scenes_res
         combats += combats_res
 
-        if result:
+        if result != []:
             global_variable_statements[line_number] = result
 
     for scene in scenes:

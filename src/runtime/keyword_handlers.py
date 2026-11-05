@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from model.context import StatementExecutionContext
 from model.story_token import Token
 from model.syntax import Keywords
@@ -9,7 +11,7 @@ from runtime.operator_handlers import (
 )
 
 
-def handle_print(context: StatementExecutionContext):
+def handle_print(context: StatementExecutionContext) -> None:
     argument = context.line[0]
     # Add global variables onto local variables for calculations
     var_table_copy = dict(context.variable_table)
@@ -28,7 +30,7 @@ def handle_print(context: StatementExecutionContext):
         )
 
 
-def handle_if_then(context: StatementExecutionContext):
+def handle_if_then(context: StatementExecutionContext) -> None | int | str:
     condition = []
     branch = []
     for token_pos in range(len(context.line)):
@@ -42,8 +44,8 @@ def handle_if_then(context: StatementExecutionContext):
         if condition[i].type == Types.COMPARISON_OPERATOR:
             result = handle_comparison_operators(
                 condition[i],
-                condition[:i],
-                condition[i + 1 :],
+                condition[i - 1],
+                condition[i + 1],
                 context.variable_table,
                 context.exception_context,
             )
@@ -54,20 +56,22 @@ def handle_if_then(context: StatementExecutionContext):
         return handle_keyword(context)
 
 
-def handle_goto(context: StatementExecutionContext):
+def handle_goto(context: StatementExecutionContext) -> int | str:
     if context.line[0].value == Keywords.NODE:
         return context.story.get_active_scene().node_table[context.line[1].value]
     if context.line[0].value == Keywords.SCENE:
         return context.line[1].value
 
+    raise RuntimeError("Internal error, cannot execute GOTO without a NODE or a SCENE")
 
-def handle_input(context: StatementExecutionContext):
+
+def handle_input(context: StatementExecutionContext) -> None:
     player_input = input()
     context.line.append(Token(Types.STRING, player_input))
     handle_set(context)
 
 
-def handle_set(context: StatementExecutionContext):
+def handle_set(context: StatementExecutionContext) -> None:
     var_table_copy = dict(context.variable_table)
     var_table_copy.update(context.global_variables)
     if context.line[1].type != Types.EXPRESSION_START:
@@ -90,7 +94,9 @@ def handle_set(context: StatementExecutionContext):
         context.global_variables[context.line[0].value] = result
 
 
-keyword_table = {
+keyword_table: dict[
+    Keywords, Callable[[StatementExecutionContext], None | int | str]
+] = {
     Keywords.PRINT: handle_print,
     Keywords.IF: handle_if_then,
     Keywords.GOTO: handle_goto,
@@ -100,7 +106,7 @@ keyword_table = {
 
 
 # Node is a special keyword and is handled in the parser when populating the table
-def handle_keyword(context: StatementExecutionContext) -> None:
+def handle_keyword(context: StatementExecutionContext) -> None | int | str:
     keyword = context.keyword.value
     if keyword == Keywords.NODE:
         return

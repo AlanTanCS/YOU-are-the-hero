@@ -1,53 +1,66 @@
+from collections.abc import Callable
+
 from exceptions import ExceptionContext, type_exception, variable_exception
 from model.story_token import Token
 from model.syntax import ArithmeticOperators, ComparisonOperators
 from model.value_types import Types
 
 
-def handle_equals(lhs, rhs):
+def handle_equals(lhs: Token, rhs: Token) -> bool:
     return lhs.value == rhs.value
 
 
-def handle_greater(lhs, rhs):
+def handle_greater(lhs: Token, rhs: Token) -> bool:
     return lhs.value > rhs.value
 
 
-def handle_less(lhs, rhs):
+def handle_less(lhs: Token, rhs: Token) -> bool:
     return lhs.value < rhs.value
 
 
-def handle_arithmetic(lhs, rhs, sign, exception_context):
-    if sign.value == ArithmeticOperators.ADD:
+def handle_arithmetic(
+    lhs: Token,
+    rhs: Token,
+    sign: ArithmeticOperators,
+    exception_context: ExceptionContext,
+) -> Token:
+    if sign == ArithmeticOperators.ADD:
         if lhs.type == Types.INTEGER and rhs.type == Types.INTEGER:
             return Token(Types.INTEGER, str(int(lhs.value) + int(rhs.value)))
         if lhs.type == Types.STRING and rhs.type == Types.STRING:
             return Token(Types.STRING, lhs.value + rhs.value)
 
-    elif sign.value == ArithmeticOperators.SUB:
+    elif sign == ArithmeticOperators.SUB:
         if lhs.type == Types.INTEGER and rhs.type == Types.INTEGER:
             return Token(Types.INTEGER, str(int(lhs.value) - int(rhs.value)))
 
     raise type_exception.UnsupportedOperationException(
-        exception_context, sign.value, lhs.type, rhs.type
+        exception_context, sign, lhs.type, rhs.type
     )
 
 
-operator_table = {
+operator_table: dict[ComparisonOperators, Callable[[Token, Token], bool]] = {
     ComparisonOperators.EQUALS: handle_equals,
     ComparisonOperators.GREATER: handle_greater,
     ComparisonOperators.LESS: handle_less,
-    ArithmeticOperators.ADD: handle_arithmetic,
-    ArithmeticOperators.SUB: handle_arithmetic,
 }
 
 
-def handle_comparison_operators(operator, lhs, rhs, variable_table, exception_context):
-    lhs = resolve_value(lhs[0], variable_table, exception_context)
-    rhs = resolve_value(rhs[0], variable_table, exception_context)
-    return operator_table[operator.value](lhs, rhs)
+def handle_comparison_operators(
+    operator: Token,
+    lhs: Token,
+    rhs: Token,
+    variable_table: dict[str, Token],
+    exception_context: ExceptionContext,
+) -> bool:
+    resolved_lhs = resolve_value(lhs, variable_table, exception_context)
+    resolved_rhs = resolve_value(rhs, variable_table, exception_context)
+    return operator_table[operator.value](resolved_lhs, resolved_rhs)
 
 
-def resolve_value(variable, variable_table, exception_context) -> Token:
+def resolve_value(
+    variable: Token, variable_table: dict[str, Token], exception_context
+) -> Token:
     if variable.type != Types.VARIABLE:
         return variable
 
@@ -60,13 +73,15 @@ def resolve_value(variable, variable_table, exception_context) -> Token:
 
 
 def resolve_expression(
-    expression: list[Token], variable_table: dict, exception_context: ExceptionContext
+    expression: list[Token],
+    variable_table: dict[str, Token],
+    exception_context: ExceptionContext,
 ) -> Token:
     sign = ArithmeticOperators.ADD
     result = None
     for token in expression:
         if token.type == Types.ARITHMETIC_OPERATOR:
-            sign = token
+            sign = token.value
         if token.type == Types.INTEGER and result:
             result = handle_arithmetic(result, token, sign, exception_context)
         if token.type == Types.VARIABLE and result:

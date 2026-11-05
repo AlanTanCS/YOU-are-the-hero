@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from exceptions import (
     ExceptionContext,
     argument_exception,
@@ -15,7 +17,9 @@ from model.value_types import Types
 from .tokenise import split_statement, tokenise
 
 
-def create_node_table(exception_context: ExceptionContext, line_indexes: dict) -> dict:
+def create_node_table(
+    exception_context: ExceptionContext, line_indexes: dict[int, str]
+) -> dict[str, int]:
     node_table = {}
     for key, value in line_indexes.items():
         if key == "EOF":
@@ -35,7 +39,7 @@ def create_node_table(exception_context: ExceptionContext, line_indexes: dict) -
     return node_table
 
 
-def parse_node(statement_parse_context: StatementParseContext):
+def parse_node(statement_parse_context: StatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if len(split) != 2:
         raise argument_exception.InvalidNumberOfArgumentsException(
@@ -44,7 +48,7 @@ def parse_node(statement_parse_context: StatementParseContext):
     return [Token(Types.KEYWORD, Keywords.NODE), Token(Types.LOCATION, split[1])]
 
 
-def parse_print(statement_parse_context: StatementParseContext):
+def parse_print(statement_parse_context: StatementParseContext) -> list[Token]:
     arguments = split_statement(statement_parse_context.line)
 
     if len(arguments) != 2:
@@ -65,27 +69,28 @@ def parse_print(statement_parse_context: StatementParseContext):
     return [Token(Types.KEYWORD, Keywords.PRINT)] + token_list
 
 
-def parse_if_then(statement_parse_context: StatementParseContext):
+def parse_if_then(statement_parse_context: StatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if (Keywords.THEN.value) not in split:
         raise syntax_exception.MissingKeywordException(
             statement_parse_context.exception_context, Keywords.THEN
         )
-    condition = split[1 : split.index(Keywords.THEN.value)]
+    raw_condition: list[str] = split[1 : split.index(Keywords.THEN.value)]
     branch = split[split.index(Keywords.THEN.value) + 1 :]
-    if len(condition) != 3:
+    if len(raw_condition) != 3:
         raise argument_exception.InvalidNumberOfArgumentsException(
-            statement_parse_context.exception_context, 3, len(condition)
+            statement_parse_context.exception_context, 3, len(raw_condition)
         )
     # remove the operator
-    operator = condition.pop(1)
+    operator = raw_condition.pop(1)
+    condition: list[Token] = []
 
     # parse literals
-    for literal in range(len(condition)):
+    for literal in range(len(raw_condition)):
         typed_word = tokenise(
-            statement_parse_context.exception_context, condition[literal]
+            statement_parse_context.exception_context, raw_condition[literal]
         )
-        condition[literal] = typed_word[0]
+        condition.append(typed_word[0])
 
     condition.insert(1, Token(Types.COMPARISON_OPERATOR, ComparisonOperators(operator)))
     if branch[0] not in Keywords:
@@ -109,11 +114,11 @@ def parse_if_then(statement_parse_context: StatementParseContext):
     )
 
 
-def parse_goto(statement_parse_context: StatementParseContext):
+def parse_goto(statement_parse_context: StatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if len(split) != 3:
         raise argument_exception.InvalidNumberOfArgumentsException(
-            statement_parse_context.exception_context, 3, len(split)
+            statement_parse_context.exception_context, 2, len(split) - 1
         )
 
     if split[1] == Keywords.NODE.value:
@@ -156,7 +161,7 @@ def parse_goto(statement_parse_context: StatementParseContext):
         )
 
 
-def parse_input(statement_parse_context: StatementParseContext):
+def parse_input(statement_parse_context: StatementParseContext) -> list[Token]:
     variable = split_statement(statement_parse_context.line)[1:]
     if len(variable) > 1:
         raise argument_exception.InvalidNumberOfArgumentsException(
@@ -173,7 +178,7 @@ def parse_input(statement_parse_context: StatementParseContext):
     return [Token(Types.KEYWORD, Keywords.INPUT)] + token
 
 
-def parse_set(statement_parse_context: StatementParseContext):
+def parse_set(statement_parse_context: StatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if len(split) != 3:
         raise argument_exception.InvalidNumberOfArgumentsException(
@@ -189,9 +194,7 @@ def parse_set(statement_parse_context: StatementParseContext):
             statement_parse_context.exception_context
         )
 
-    if variable not in statement_parse_context.global_variables:
-        statement_parse_context.variables[variable] = None
-    else:
+    if variable in statement_parse_context.global_variables:
         lhs[0].type = Types.GLOBAL_VARIABLE
 
     if (
@@ -205,7 +208,7 @@ def parse_set(statement_parse_context: StatementParseContext):
     return [Token(Types.KEYWORD, Keywords.SET)] + lhs + rhs
 
 
-keyword_table = {
+keyword_table: dict[Keywords, Callable[[StatementParseContext], list[Token]]] = {
     Keywords.NODE: parse_node,
     Keywords.PRINT: parse_print,
     Keywords.IF: parse_if_then,
@@ -215,6 +218,8 @@ keyword_table = {
 }
 
 
-def parse_scene_statement(statement_parse_context: StatementParseContext):
+def parse_scene_statement(
+    statement_parse_context: StatementParseContext,
+) -> list[Token]:
     enum_value = Keywords(split_statement(statement_parse_context.line)[0])
     return keyword_table[enum_value](statement_parse_context)

@@ -16,7 +16,7 @@ class DuplicateNodeException(DeclarationException):
         line_number_first: int,
         line_number_second: int,
         node: str,
-    ):
+    ) -> None:
         self.message = f"Found duplicated node identifier: {node}"
         exception_context.line_number = None
         self.message += report_error_info(exception_context)
@@ -27,7 +27,7 @@ class DuplicateNodeException(DeclarationException):
 class AlreadyDeclaredException(DeclarationException):
     """Exception raised for attempt to redeclare something that may only be declared once."""
 
-    def __init__(self, exception_context: ExceptionContext, keyword: Enum):
+    def __init__(self, exception_context: ExceptionContext, keyword: Enum) -> None:
         self.message = f"Cannot redeclare {keyword} more than once"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)
