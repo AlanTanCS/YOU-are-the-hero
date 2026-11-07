@@ -1,4 +1,5 @@
-from exceptions import ExceptionContext, type_exception
+from exceptions import ExceptionContext, argument_exception, type_exception
+from model.context import StatementParseContext
 from model.story_token import Token
 from model.syntax import EntryKeywords
 from model.value_types import Types
@@ -6,27 +7,12 @@ from model.value_types import Types
 from .tokenise import tokenise
 
 
-def parse_entry_statement(
-    exception_context: ExceptionContext, line: str
-) -> tuple[list[str], list[str], list[Token]]:
-    enum_value = EntryKeywords(line.split()[0])
-
-    scene_table = []
-    combat_table = []
-    result = []
-
-    if enum_value == EntryKeywords.SCENE_LIST:
-        scene_table = parse_scene_combat(exception_context, line)
-    if enum_value == EntryKeywords.COMBAT_LIST:
-        combat_table = parse_scene_combat(exception_context, line)
-    if enum_value == EntryKeywords.GLOBAL:
-        result = parse_global(exception_context, line)
-
-    return scene_table, combat_table, result
-
-
 def parse_scene_combat(exception_context: ExceptionContext, line: str) -> list[str]:
     scene_combat_list = line.split(maxsplit=1)
+    if len(scene_combat_list) != 2:
+        raise argument_exception.InvalidNumberOfArgumentsException(
+            exception_context, 1, len(scene_combat_list) - 1
+        )
     if scene_combat_list[1][0] != "[" or scene_combat_list[1][-1] != "]":
         raise type_exception.UnexpectedTypeException(exception_context, ["list"])
     scene_combats = scene_combat_list[1][1:-1]
@@ -37,10 +23,25 @@ def parse_scene_combat(exception_context: ExceptionContext, line: str) -> list[s
     return scene_combats
 
 
-def parse_global(exception_context: ExceptionContext, line: str) -> list[Token]:
-    split = line.split(maxsplit=2)
+def parse_global(statement_parse_context: StatementParseContext) -> list[Token]:
+    split = statement_parse_context.line.split(maxsplit=2)
+    if len(split) != 3:
+        raise argument_exception.InvalidNumberOfArgumentsException(
+            statement_parse_context.exception_context, 2, len(split) - 1
+        )
     variable = split[1]
-    rhs = tokenise(exception_context, split[2])
-    lhs = tokenise(exception_context, variable)
 
-    return [Token(Types.KEYWORD, EntryKeywords.GLOBAL)] + lhs + rhs
+    rhs = tokenise(statement_parse_context.exception_context, split[2])
+    lhs = tokenise(statement_parse_context.exception_context, variable)
+
+    return (
+        [
+            Token(
+                Types.KEYWORD,
+                EntryKeywords.GLOBAL,
+                statement_parse_context.namespace[-1],
+            )
+        ]
+        + lhs
+        + rhs
+    )

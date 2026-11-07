@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 from model.context import StatementExecutionContext
 from model.story_token import Token
-from model.syntax import Keywords
+from model.syntax import SceneKeywords
 from model.value_types import Types
 from runtime.operator_handlers import (
     handle_comparison_operators,
@@ -15,7 +15,7 @@ def handle_print(context: StatementExecutionContext) -> None:
     argument = context.line[0]
     # Add global variables onto local variables for calculations
     var_table_copy = dict(context.variable_table)
-    var_table_copy.update(context.global_variables)
+    var_table_copy.update(context.story.global_variables)
     if argument.type == Types.INTEGER or argument.type == Types.STRING:
         print(argument.value)
     if argument.type == Types.GLOBAL_VARIABLE:
@@ -34,7 +34,7 @@ def handle_if_then(context: StatementExecutionContext) -> None | int | str:
     condition = []
     branch = []
     for token_pos in range(len(context.line)):
-        if context.line[token_pos].value == Keywords.THEN:
+        if context.line[token_pos].value == SceneKeywords.THEN:
             condition = context.line[:token_pos]
             branch = context.line[token_pos + 1 :]
             break
@@ -57,9 +57,9 @@ def handle_if_then(context: StatementExecutionContext) -> None | int | str:
 
 
 def handle_goto(context: StatementExecutionContext) -> int | str:
-    if context.line[0].value == Keywords.NODE:
+    if context.line[0].value == SceneKeywords.NODE:
         return context.story.get_active_scene().node_table[context.line[1].value]
-    if context.line[0].value == Keywords.SCENE:
+    if context.line[0].value == SceneKeywords.SCENE:
         return context.line[1].value
 
     raise RuntimeError("Internal error, cannot execute GOTO without a NODE or a SCENE")
@@ -73,13 +73,13 @@ def handle_input(context: StatementExecutionContext) -> None:
 
 def handle_set(context: StatementExecutionContext) -> None:
     var_table_copy = dict(context.variable_table)
-    var_table_copy.update(context.global_variables)
+    var_table_copy.update(context.story.global_variables)
     if context.line[1].type != Types.EXPRESSION_START:
         resolved = resolve_value(
             context.line[1], var_table_copy, context.exception_context
         )
-        if context.line[0].value in context.global_variables:
-            context.global_variables[context.line[0].value] = resolved
+        if context.line[0].value in context.story.global_variables:
+            context.story.global_variables[context.line[0].value] = resolved
         else:
             context.variable_table[context.line[0].value] = resolved
         return
@@ -91,24 +91,24 @@ def handle_set(context: StatementExecutionContext) -> None:
     if context.line[0].type == Types.VARIABLE:
         context.variable_table[context.line[0].value] = result
     else:
-        context.global_variables[context.line[0].value] = result
+        context.story.global_variables[context.line[0].value] = result
 
 
 keyword_table: dict[
-    Keywords, Callable[[StatementExecutionContext], None | int | str]
+    SceneKeywords, Callable[[StatementExecutionContext], None | int | str]
 ] = {
-    Keywords.PRINT: handle_print,
-    Keywords.IF: handle_if_then,
-    Keywords.GOTO: handle_goto,
-    Keywords.INPUT: handle_input,
-    Keywords.SET: handle_set,
+    SceneKeywords.PRINT: handle_print,
+    SceneKeywords.IF: handle_if_then,
+    SceneKeywords.GOTO: handle_goto,
+    SceneKeywords.INPUT: handle_input,
+    SceneKeywords.SET: handle_set,
 }
 
 
 # Node is a special keyword and is handled in the parser when populating the table
 def handle_keyword(context: StatementExecutionContext) -> None | int | str:
     keyword = context.keyword.value
-    if keyword == Keywords.NODE:
+    if keyword == SceneKeywords.NODE:
         return
     removed_keyword = context.line[1:]
 

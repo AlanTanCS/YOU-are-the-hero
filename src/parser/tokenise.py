@@ -1,8 +1,13 @@
 import re
 
-from exceptions import ExceptionContext, syntax_exception, variable_exception
+from exceptions import (
+    ExceptionContext,
+    reference_exception,
+    syntax_exception,
+    variable_exception,
+)
 from model.story_token import Token
-from model.syntax import ArithmeticOperators
+from model.syntax import ArithmeticOperators, Namespace
 from model.value_types import Types
 
 
@@ -10,6 +15,7 @@ def split_statement(line: str) -> list[str]:
     arguments = []
     current = []
     parentheses_depth = 0
+    brackets_depth = 0
     in_string = False
 
     for character in line:
@@ -19,8 +25,17 @@ def split_statement(line: str) -> list[str]:
             parentheses_depth += 1
         elif not in_string and character == ")":
             parentheses_depth -= 1
+        elif not in_string and character == "[":
+            brackets_depth += 1
+        elif not in_string and character == "]":
+            brackets_depth -= 1
 
-        if character.isspace() and parentheses_depth == 0 and not in_string:
+        if (
+            character.isspace()
+            and parentheses_depth == 0
+            and brackets_depth == 0
+            and not in_string
+        ):
             if current:
                 arguments.append("".join(current))
                 current = []
@@ -33,11 +48,30 @@ def split_statement(line: str) -> list[str]:
     return arguments
 
 
+def strip_qualified_name(keyword: str) -> str:
+    return keyword.split(".")[-1]
+
+
+def get_qualified_name(
+    exception_context: ExceptionContext, keyword: str
+) -> list[Namespace]:
+    try:
+        return [Namespace(i) for i in keyword.split(".")[:-1]]
+    except ValueError as exception:
+        raise reference_exception.NamespaceNotFoundException(
+            exception_context, exception.args[0]
+        )
+
+
 def determine_type(exception_context: ExceptionContext, line: str) -> Types:
     if line[0] == "(":
         return Types.EXPRESSION_START
     if line[0] == ")":
         return Types.EXPRESSION_END
+    if line[0] == "[":
+        return Types.LIST_START
+    if line[0] == "]":
+        return Types.LIST_END
     if line in ArithmeticOperators:
         return Types.ARITHMETIC_OPERATOR
     if line[0] == '"' and line[-1] == '"':
@@ -58,15 +92,18 @@ def tokenise(exception_context: ExceptionContext, line: str) -> list[Token]:
     type = determine_type(exception_context, line)
     if type == Types.STRING:
         return [Token(type, line[1:-1])]
-    if type == Types.EXPRESSION_START:
+    if type == Types.EXPRESSION_START or Types.LIST_START:
         # Check if expression is valid by checking parenthesis
-        parentheses_only = re.sub(r"[^()]", "", line)
-        while re.search(r"\(\)", parentheses_only):
-            parentheses_only = re.sub(r"\(\)", "", parentheses_only)
-        if parentheses_only:
-            raise syntax_exception.InvalidExpressionException(exception_context)
+        delimiters_only = re.sub(r"[^()[\]]", "", line)
+        while re.search(r"\(\)|\[\]", delimiters_only):
+            delimiters_only = re.sub(r"\(\)|\[\]", "", delimiters_only)
+        if delimiters_only:
+            if type == Types.EXPRESSION_START:
+                raise syntax_exception.InvalidExpressionException(exception_context)
+            else:
+                raise syntax_exception.InvalidListException(exception_context)
 
-        elements = re.findall(r'"[^"\n]*"|\(|\)|\+|-|\d+|[A-Za-z_]\w*', line)
+        elements = re.findall(r'"[^"\n]*"|\(|\)|\[|\]|\+|-|\d+|[A-Za-z_]\w*', line)
         out = []
         for element in elements:
             type = determine_type(exception_context, element)

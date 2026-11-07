@@ -1,0 +1,7 @@
+SET test [1, 2, 3]
+ENTRY.LIST.SET test "hi"
+PRINT "Hello world!"
+PRINT testingVar
+ENTRY.GLOBAL testingIfthisWORKs 1000
+
+GOTO SCENE Scene2

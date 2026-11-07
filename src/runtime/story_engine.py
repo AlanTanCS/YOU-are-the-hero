@@ -1,11 +1,11 @@
 import os
 
-from exceptions import ExceptionContext
+from exceptions import ExceptionContext, reference_exception
 from model.context import StatementExecutionContext
 from model.story import SceneInfo, Story
 from model.story_token import Token
 from parser import parse_scene
-from runtime.keyword_handlers import handle_keyword as handle
+from runtime.handle_keyword import handle_keyword as handle
 
 
 class StoryEngine:
@@ -68,7 +68,6 @@ class StoryEngine:
                 line,
                 self.story,
                 self.story.get_active_scene().variable_table,
-                self.story.global_variables,
             )
         )
         if new_loc is not None:
@@ -95,17 +94,18 @@ class StoryEngine:
         self.story.cached_scenes = [
             self.get_file_scene_info(scene) for scene in self.story.scenes
         ]
+        if self.story.cached_scenes == []:
+            raise reference_exception.ScenesNotFoundException()
         self.story.scene_info = None
 
     def run(self) -> None:
         self.validate_story()
-
         # initial scene
-        scene_info = self.story.get_scene(0)
-        if isinstance(scene_info, SceneInfo):
-            self.set_scene(scene_info)
+        initial_scene = self.story.get_scene(0)
+        if isinstance(initial_scene, SceneInfo):
+            self.set_scene(initial_scene)
         else:
-            self.set_scene(self.get_file_scene_info(scene_info))
+            self.set_scene(self.get_file_scene_info(initial_scene))
 
         # execute scene and then move onto next
         while True:

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from exceptions import ExceptionContext
 from model.story import Story
+from model.syntax import Namespace
 
 from .story_token import Token
 
@@ -13,14 +14,18 @@ class StatementExecutionContext:
     line: list[Token]
     story: Story
     variable_table: dict[str, Token]
-    global_variables: dict[str, Token]
 
 
 @dataclass
 class StatementParseContext:
     exception_context: ExceptionContext
     line: str
-    node_table: dict[str, int]
+    namespace: list[Namespace]
+
+
+@dataclass
+class SceneStatementParseContext(StatementParseContext):
     scenes: list[str]
     combats: list[str]
+    node_table: dict[str, int]
     global_variables: dict[str, Token]

@@ -22,7 +22,7 @@ class InvalidKeywordException(SyntaxException):
     """Exception raised when an invalid keyword is found"""
 
     def __init__(self, exception_context: ExceptionContext, keyword_used: Enum) -> None:
-        if keyword_used == syntax.Keywords:
+        if keyword_used == syntax.SceneKeywords:
             # self.message = "Found a keyword for scenes in the entry file"
             self.message = f"Keyword '{keyword_used}' was found in the entry file and is only allowed in scenes"
         elif keyword_used == syntax.EntryKeywords:
@@ -37,7 +37,7 @@ class MissingKeywordException(SyntaxException):
     """Exception raised for when a keyword is expected but not found."""
 
     def __init__(
-        self, exception_context: ExceptionContext, keyword: syntax.Keywords
+        self, exception_context: ExceptionContext, keyword: syntax.SceneKeywords
     ) -> None:
         self.message = f"Expected keyword: '{keyword}' but could not find '{keyword}'"
         self.message += report_error_info(exception_context)
@@ -49,5 +49,14 @@ class InvalidExpressionException(SyntaxException):
 
     def __init__(self, exception_context: ExceptionContext) -> None:
         self.message = "All expressions must have a closing parenthesis"
+        self.message += report_error_info(exception_context)
+        super().__init__(self.message)
+
+
+class InvalidListException(SyntaxException):
+    """Exception raised for lists with an invalid structure."""
+
+    def __init__(self, exception_context: ExceptionContext) -> None:
+        self.message = "All lists must have a closing parenthesis"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)

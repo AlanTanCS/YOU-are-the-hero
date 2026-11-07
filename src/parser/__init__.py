@@ -1,11 +1,17 @@
 import os
 
-from exceptions import ExceptionContext, declaration_exception, syntax_exception
-from model.context import StatementParseContext
+from exceptions import (
+    ExceptionContext,
+    declaration_exception,
+    reference_exception,
+    syntax_exception,
+)
+from model.context import SceneStatementParseContext, StatementParseContext
 from model.story_token import Token
-from model.syntax import EntryKeywords, Keywords
+from model.syntax import EntryKeywords, Namespace, SceneKeywords
+from parser.tokenise import get_qualified_name, split_statement, strip_qualified_name
 
-from .entry import parse_entry_statement
+from .entry import parse_global, parse_scene_combat
 from .scene import create_node_table, parse_scene_statement
 
 
@@ -27,14 +33,18 @@ def parse_scene(
             exception_context.line_number = i + 1
             if line == "" or line[:2] == "//":
                 continue
-            if line.split()[0] not in Keywords:
-                if line.split()[0] in EntryKeywords:
+
+            keyword = line.split()[0]
+            namespace = keyword.split(".")[0]
+
+            if keyword not in SceneKeywords and namespace not in Namespace:
+                if keyword in EntryKeywords:
                     raise syntax_exception.InvalidKeywordException(
-                        exception_context, EntryKeywords(line.split()[0])
+                        exception_context, EntryKeywords(keyword)
                     )
                 else:
                     raise syntax_exception.UnknownKeywordException(
-                        exception_context, line.split()[0]
+                        exception_context, keyword
                     )
             line_indexes[i + 1] = line
 
@@ -45,15 +55,16 @@ def parse_scene(
     # Parse each line
     for line_number, line in line_indexes.items():
         exception_context.line_number = line_number
-        statement_parse_context = StatementParseContext(
+        statement_parse_context = SceneStatementParseContext(
             exception_context,
             line,
-            node_table,
+            [Namespace.SCENE],
             scenes,
             combats,
+            node_table,
             global_variables,
         )
-        result = parse_scene_statement(statement_parse_context)
+        result = parse_statement(statement_parse_context)
 
         line_indexes[line_number] = result
 
@@ -76,9 +87,9 @@ def parse_entry_point(
             line = line.strip()
             if line == "" or line[:2] == "//":
                 continue
-            if line.split()[0] in Keywords:
+            if line.split()[0] in SceneKeywords:
                 raise syntax_exception.InvalidKeywordException(
-                    exception_context, Keywords(line.split()[0])
+                    exception_context, SceneKeywords(line.split()[0])
                 )
             if line.split()[0] not in EntryKeywords:
                 raise syntax_exception.UnknownKeywordException(
@@ -88,7 +99,16 @@ def parse_entry_point(
 
     for line_number, line in line_indexes.items():
         exception_context.line_number = line_number
-        scenes_res, combats_res, result = parse_entry_statement(exception_context, line)
+        enum_value = EntryKeywords(line.split()[0])
+        scenes_res, combats_res, result = [], [], []
+        if enum_value == EntryKeywords.SCENE_LIST:
+            scenes_res = parse_scene_combat(exception_context, line)
+        if enum_value == EntryKeywords.COMBAT_LIST:
+            combats_res = parse_scene_combat(exception_context, line)
+        if enum_value == EntryKeywords.GLOBAL:
+            context = StatementParseContext(exception_context, line, [Namespace.ENTRY])
+            result = parse_statement(context)
+
         if scenes_res != [] and scenes != []:
             raise declaration_exception.AlreadyDeclaredException(
                 exception_context, EntryKeywords.SCENE_LIST
@@ -114,3 +134,51 @@ def parse_entry_point(
             raise FileNotFoundError(path)
 
     return scenes, combats, global_variable_statements
+
+
+VALID_CHILDREN: dict[Namespace, set[Namespace]] = {
+    Namespace.SCENE: {Namespace.LIST, Namespace.ENTRY},
+    Namespace.ENTRY: {Namespace.LIST, Namespace.SCENE},
+    Namespace.GOTO: set(),
+    Namespace.LIST: set(),
+}
+
+
+def validate_namespace_children(
+    namespaces: list[Namespace], exception_context: ExceptionContext
+):
+    prev = namespaces[0]
+    for i in namespaces[1:]:
+        if i not in VALID_CHILDREN[prev]:
+            raise reference_exception.NamespaceNotFoundException(exception_context, i)
+        prev = i
+
+
+def parse_statement(statement_parse_context: StatementParseContext):
+    keyword = split_statement(statement_parse_context.line)[0]
+    statement_parse_context.namespace += get_qualified_name(
+        statement_parse_context.exception_context, keyword
+    )
+    validate_namespace_children(
+        statement_parse_context.namespace, statement_parse_context.exception_context
+    )
+
+    if statement_parse_context.namespace[-1] == Namespace.SCENE:
+        if not isinstance(statement_parse_context, SceneStatementParseContext):
+            raise RuntimeError("Internal error, namespace not properly parsed.")
+        statement_parse_context.line = " ".join(
+            [strip_qualified_name(keyword)]
+            + split_statement(statement_parse_context.line)[1:]
+        )
+        return parse_scene_statement(statement_parse_context)
+
+    if statement_parse_context.namespace[-1] == Namespace.ENTRY:
+        statement_parse_context.line = " ".join(
+            [strip_qualified_name(keyword)]
+            + split_statement(statement_parse_context.line)[1:]
+        )
+        return parse_global(statement_parse_context)
+
+    if statement_parse_context.namespace[-1] == Namespace.LIST:
+        # print("LIST NAMESPACE")
+        pass

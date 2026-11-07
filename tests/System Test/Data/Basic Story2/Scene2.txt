@@ -1,0 +1,3 @@
+PRINT "HI NUMBER2"
+PRINT testingVar
+PRINT testingIfthisWORKs

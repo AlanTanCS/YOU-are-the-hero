@@ -9,9 +9,9 @@ from exceptions import (
     type_exception,
     variable_exception,
 )
-from model.context import StatementParseContext
+from model.context import SceneStatementParseContext
 from model.story_token import Token
-from model.syntax import ComparisonOperators, Keywords
+from model.syntax import ComparisonOperators, SceneKeywords
 from model.value_types import Types
 
 from .tokenise import split_statement, tokenise
@@ -22,10 +22,7 @@ def create_node_table(
 ) -> dict[str, int]:
     node_table = {}
     for key, value in line_indexes.items():
-        if key == "EOF":
-            continue
-        enum_value = Keywords(split_statement(value)[0])
-        if enum_value != Keywords.NODE:
+        if split_statement(value)[0] != SceneKeywords.NODE:
             continue
 
         node_removed = split_statement(value)[1:]
@@ -39,16 +36,19 @@ def create_node_table(
     return node_table
 
 
-def parse_node(statement_parse_context: StatementParseContext) -> list[Token]:
+def parse_node(statement_parse_context: SceneStatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if len(split) != 2:
         raise argument_exception.InvalidNumberOfArgumentsException(
             statement_parse_context.exception_context, 1, len(split)
         )
-    return [Token(Types.KEYWORD, Keywords.NODE), Token(Types.LOCATION, split[1])]
+    return [
+        Token(Types.KEYWORD, SceneKeywords.NODE, statement_parse_context.namespace[-1]),
+        Token(Types.LOCATION, split[1]),
+    ]
 
 
-def parse_print(statement_parse_context: StatementParseContext) -> list[Token]:
+def parse_print(statement_parse_context: SceneStatementParseContext) -> list[Token]:
     arguments = split_statement(statement_parse_context.line)
 
     if len(arguments) != 2:
@@ -66,17 +66,19 @@ def parse_print(statement_parse_context: StatementParseContext) -> list[Token]:
             statement_parse_context.exception_context
         )
 
-    return [Token(Types.KEYWORD, Keywords.PRINT)] + token_list
+    return [
+        Token(Types.KEYWORD, SceneKeywords.PRINT, statement_parse_context.namespace[-1])
+    ] + token_list
 
 
-def parse_if_then(statement_parse_context: StatementParseContext) -> list[Token]:
+def parse_if_then(statement_parse_context: SceneStatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
-    if (Keywords.THEN.value) not in split:
+    if (SceneKeywords.THEN.value) not in split:
         raise syntax_exception.MissingKeywordException(
-            statement_parse_context.exception_context, Keywords.THEN
+            statement_parse_context.exception_context, SceneKeywords.THEN
         )
-    raw_condition: list[str] = split[1 : split.index(Keywords.THEN.value)]
-    branch = split[split.index(Keywords.THEN.value) + 1 :]
+    raw_condition: list[str] = split[1 : split.index(SceneKeywords.THEN.value)]
+    branch = split[split.index(SceneKeywords.THEN.value) + 1 :]
     if len(raw_condition) != 3:
         raise argument_exception.InvalidNumberOfArgumentsException(
             statement_parse_context.exception_context, 3, len(raw_condition)
@@ -93,75 +95,81 @@ def parse_if_then(statement_parse_context: StatementParseContext) -> list[Token]
         condition.append(typed_word[0])
 
     condition.insert(1, Token(Types.COMPARISON_OPERATOR, ComparisonOperators(operator)))
-    if branch[0] not in Keywords:
+    if branch[0] not in SceneKeywords:
         raise syntax_exception.UnknownKeywordException(
             statement_parse_context.exception_context, branch[0]
         )
     if (
-        branch[0] == Keywords.NODE.value
-        or branch[0] == Keywords.SCENE.value
-        or branch[0] == Keywords.COMBAT.value
+        branch[0] == SceneKeywords.NODE.value
+        or branch[0] == SceneKeywords.SCENE.value
+        or branch[0] == SceneKeywords.COMBAT.value
     ):
         raise syntax_exception.InvalidKeywordException(
-            statement_parse_context.exception_context, Keywords(branch[0])
+            statement_parse_context.exception_context, SceneKeywords(branch[0])
         )
     statement_parse_context.line = " ".join(branch)
     return (
-        [Token(Types.KEYWORD, Keywords.IF)]
+        [Token(Types.KEYWORD, SceneKeywords.IF, statement_parse_context.namespace[-1])]
         + condition
-        + [Token(Types.KEYWORD, Keywords.THEN)]
+        + [Token(Types.KEYWORD, SceneKeywords.THEN)]
         + parse_scene_statement(statement_parse_context)
     )
 
 
-def parse_goto(statement_parse_context: StatementParseContext) -> list[Token]:
+def parse_goto(statement_parse_context: SceneStatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if len(split) != 3:
         raise argument_exception.InvalidNumberOfArgumentsException(
             statement_parse_context.exception_context, 2, len(split) - 1
         )
 
-    if split[1] == Keywords.NODE.value:
+    if split[1] == SceneKeywords.NODE.value:
         if split[2] not in statement_parse_context.node_table:
             raise reference_exception.LocationNotFoundException(
                 statement_parse_context.exception_context, split[2]
             )
         return [
-            Token(Types.KEYWORD, Keywords.GOTO),
-            Token(Types.KEYWORD, Keywords.NODE),
+            Token(
+                Types.KEYWORD, SceneKeywords.GOTO, statement_parse_context.namespace[-1]
+            ),
+            Token(Types.KEYWORD, SceneKeywords.NODE),
             Token(Types.LOCATION, split[2]),
         ]
-    if split[1] == Keywords.SCENE.value:
+    if split[1] == SceneKeywords.SCENE.value:
         if split[2] not in statement_parse_context.scenes:
             raise reference_exception.LocationNotFoundException(
                 statement_parse_context.exception_context, split[2]
             )
         return [
-            Token(Types.KEYWORD, Keywords.GOTO),
-            Token(Types.KEYWORD, Keywords.SCENE),
+            Token(
+                Types.KEYWORD, SceneKeywords.GOTO, statement_parse_context.namespace[-1]
+            ),
+            Token(Types.KEYWORD, SceneKeywords.SCENE),
             Token(Types.LOCATION, split[2]),
         ]
-    if split[1] == Keywords.COMBAT.value:
+    if split[1] == SceneKeywords.COMBAT.value:
         if split[2] not in statement_parse_context.combats:
             raise reference_exception.LocationNotFoundException(
                 statement_parse_context.exception_context, split[2]
             )
         return [
-            Token(Types.KEYWORD, Keywords.GOTO),
-            Token(Types.KEYWORD, Keywords.SCENE),
+            Token(
+                Types.KEYWORD, SceneKeywords.GOTO, statement_parse_context.namespace[-1]
+            ),
+            Token(Types.KEYWORD, SceneKeywords.SCENE),
             Token(Types.LOCATION, split[2]),
         ]
     else:
-        if split[1] in Keywords:
+        if split[1] in SceneKeywords:
             raise syntax_exception.InvalidKeywordException(
-                statement_parse_context.exception_context, Keywords(split[1])
+                statement_parse_context.exception_context, SceneKeywords(split[1])
             )
         raise syntax_exception.UnknownKeywordException(
             statement_parse_context.exception_context, split[1]
         )
 
 
-def parse_input(statement_parse_context: StatementParseContext) -> list[Token]:
+def parse_input(statement_parse_context: SceneStatementParseContext) -> list[Token]:
     variable = split_statement(statement_parse_context.line)[1:]
     if len(variable) > 1:
         raise argument_exception.InvalidNumberOfArgumentsException(
@@ -175,10 +183,12 @@ def parse_input(statement_parse_context: StatementParseContext) -> list[Token]:
             statement_parse_context.exception_context, ["variable"]
         )
 
-    return [Token(Types.KEYWORD, Keywords.INPUT)] + token
+    return [
+        Token(Types.KEYWORD, SceneKeywords.INPUT, statement_parse_context.namespace[-1])
+    ] + token
 
 
-def parse_set(statement_parse_context: StatementParseContext) -> list[Token]:
+def parse_set(statement_parse_context: SceneStatementParseContext) -> list[Token]:
     split = split_statement(statement_parse_context.line)
     if len(split) != 3:
         raise argument_exception.InvalidNumberOfArgumentsException(
@@ -205,21 +215,34 @@ def parse_set(statement_parse_context: StatementParseContext) -> list[Token]:
             statement_parse_context.exception_context
         )
 
-    return [Token(Types.KEYWORD, Keywords.SET)] + lhs + rhs
+    return (
+        [Token(Types.KEYWORD, SceneKeywords.SET, statement_parse_context.namespace[-1])]
+        + lhs
+        + rhs
+    )
 
 
-keyword_table: dict[Keywords, Callable[[StatementParseContext], list[Token]]] = {
-    Keywords.NODE: parse_node,
-    Keywords.PRINT: parse_print,
-    Keywords.IF: parse_if_then,
-    Keywords.GOTO: parse_goto,
-    Keywords.INPUT: parse_input,
-    Keywords.SET: parse_set,
+def parse_then(statement_parse_context: SceneStatementParseContext) -> list[Token]:
+    raise syntax_exception.InvalidKeywordException(
+        statement_parse_context.exception_context, SceneKeywords.THEN
+    )
+
+
+keyword_table: dict[
+    SceneKeywords, Callable[[SceneStatementParseContext], list[Token]]
+] = {
+    SceneKeywords.NODE: parse_node,
+    SceneKeywords.PRINT: parse_print,
+    SceneKeywords.IF: parse_if_then,
+    SceneKeywords.GOTO: parse_goto,
+    SceneKeywords.INPUT: parse_input,
+    SceneKeywords.SET: parse_set,
+    SceneKeywords.THEN: parse_then,
 }
 
 
 def parse_scene_statement(
-    statement_parse_context: StatementParseContext,
+    statement_parse_context: SceneStatementParseContext,
 ) -> list[Token]:
-    enum_value = Keywords(split_statement(statement_parse_context.line)[0])
+    enum_value = SceneKeywords(split_statement(statement_parse_context.line)[0])
     return keyword_table[enum_value](statement_parse_context)
