@@ -27,7 +27,6 @@ def global_init(
 def global_init_test(
     statement_execution_context: StatementExecutionContext,
 ) -> None:
-    # global_variables = {}
     removed_keyword = statement_execution_context.line[1:]
     if removed_keyword[0].type != Types.VARIABLE:
         raise variable_exception.InvalidAssignmentTargetException(

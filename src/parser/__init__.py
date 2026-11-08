@@ -8,7 +8,7 @@ from exceptions import (
 )
 from model.context import SceneStatementParseContext, StatementParseContext
 from model.story_token import Token
-from model.syntax import EntryKeywords, Namespace, SceneKeywords
+from model.syntax import DEFAULT_NAMESPACES, EntryKeywords, Namespace, SceneKeywords
 from parser.tokenise import get_qualified_name, split_statement, strip_qualified_name
 
 from .entry import parse_global, parse_scene_combat
@@ -136,25 +136,17 @@ def parse_entry_point(
     return scenes, combats, global_variable_statements
 
 
-VALID_CHILDREN: dict[Namespace, set[Namespace]] = {
-    Namespace.SCENE: {Namespace.LIST, Namespace.ENTRY},
-    Namespace.ENTRY: {Namespace.LIST, Namespace.SCENE},
-    Namespace.GOTO: set(),
-    Namespace.LIST: set(),
-}
-
-
 def validate_namespace_children(
     namespaces: list[Namespace], exception_context: ExceptionContext
-):
+) -> None:
     prev = namespaces[0]
     for i in namespaces[1:]:
-        if i not in VALID_CHILDREN[prev]:
+        if i not in DEFAULT_NAMESPACES[prev]:
             raise reference_exception.NamespaceNotFoundException(exception_context, i)
         prev = i
 
 
-def parse_statement(statement_parse_context: StatementParseContext):
+def parse_statement(statement_parse_context: StatementParseContext) -> list[Token]:
     keyword = split_statement(statement_parse_context.line)[0]
     statement_parse_context.namespace += get_qualified_name(
         statement_parse_context.exception_context, keyword
@@ -180,5 +172,5 @@ def parse_statement(statement_parse_context: StatementParseContext):
         return parse_global(statement_parse_context)
 
     if statement_parse_context.namespace[-1] == Namespace.LIST:
-        # print("LIST NAMESPACE")
         pass
+    return []

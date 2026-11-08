@@ -30,9 +30,12 @@ def handle_arithmetic(
         if lhs.type == Types.STRING and rhs.type == Types.STRING:
             return Token(Types.STRING, lhs.value + rhs.value)
 
-    elif sign == ArithmeticOperators.SUB:
-        if lhs.type == Types.INTEGER and rhs.type == Types.INTEGER:
-            return Token(Types.INTEGER, str(int(lhs.value) - int(rhs.value)))
+    elif (
+        sign == ArithmeticOperators.SUB
+        and lhs.type == Types.INTEGER
+        and rhs.type == Types.INTEGER
+    ):
+        return Token(Types.INTEGER, str(int(lhs.value) - int(rhs.value)))
 
     raise type_exception.UnsupportedOperationException(
         exception_context, sign, lhs.type, rhs.type

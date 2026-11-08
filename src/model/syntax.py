@@ -48,3 +48,11 @@ class ComparisonOperators(StrEnum):
 class ArithmeticOperators(StrEnum):
     ADD = "+"
     SUB = "-"
+
+
+DEFAULT_NAMESPACES: dict[Namespace, set[Namespace]] = {
+    Namespace.SCENE: {Namespace.LIST, Namespace.ENTRY},
+    Namespace.ENTRY: {Namespace.LIST, Namespace.SCENE},
+    Namespace.GOTO: set(),
+    Namespace.LIST: set(),
+}
