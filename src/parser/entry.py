@@ -1,7 +1,7 @@
 from exceptions import ExceptionContext, argument_exception, type_exception
 from model.context import StatementParseContext
 from model.story_token import Token
-from model.syntax import EntryKeywords
+from model.syntax import EntryKeywords, Namespace
 from model.value_types import Types
 
 from .tokenise import tokenise
@@ -31,8 +31,8 @@ def parse_global(statement_parse_context: StatementParseContext) -> list[Token]:
         )
     variable = split[1]
 
-    rhs = tokenise(statement_parse_context.exception_context, split[2])
-    lhs = tokenise(statement_parse_context.exception_context, variable)
+    rhs = tokenise(statement_parse_context.exception_context, split[2], Namespace.ENTRY)
+    lhs = tokenise(statement_parse_context.exception_context, variable, Namespace.ENTRY)
 
     return (
         [

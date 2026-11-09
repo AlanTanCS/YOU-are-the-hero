@@ -19,11 +19,6 @@ class EntryKeywords(StrEnum):
     GLOBAL = "GLOBAL"
 
 
-class GotoKeywords(StrEnum):
-    SCENE = "SCENE"
-    COMBAT = "COMBAT"
-
-
 class ListKeywords(StrEnum):
     GET = "GET"
     SET = "SET"
@@ -56,3 +51,9 @@ DEFAULT_NAMESPACES: dict[Namespace, set[Namespace]] = {
     Namespace.GOTO: set(),
     Namespace.LIST: set(),
 }
+
+KEYWORD_ENUMS = (
+    SceneKeywords,
+    EntryKeywords,
+    ListKeywords,
+)

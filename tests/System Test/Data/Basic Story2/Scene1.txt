@@ -1,7 +1,14 @@
-SET test [1, 2, 3]
-ENTRY.LIST.SET test "hi"
-PRINT "Hello world!"
-PRINT testingVar
-ENTRY.GLOBAL testingIfthisWORKs 1000
+//INPUT choice
+//IF choice == "1" THEN GOTO NODE intro
+//SET variable (1, 2, 3)
+SET test (LIST.GET)
+//LIST.SET test 2
+//SET testing (LIST.GET test 1)
+//PRINT testing
+// PRINT LIST.GET test 1
+//LIST.SET test "hi"
+//PRINT "Hello world!"
+//PRINT testingVar
+//ENTRY.GLOBAL testingIfthisWORKs 1000
 
-GOTO SCENE Scene2
+//GOTO SCENE Scene2

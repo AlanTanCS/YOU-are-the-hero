@@ -48,7 +48,7 @@ class InvalidExpressionException(SyntaxException):
     """Exception raised for expressions with an invalid structure."""
 
     def __init__(self, exception_context: ExceptionContext) -> None:
-        self.message = "All expressions must have a closing parenthesis"
+        self.message = "Expression found is ill-formed"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)
 
@@ -57,6 +57,6 @@ class InvalidListException(SyntaxException):
     """Exception raised for lists with an invalid structure."""
 
     def __init__(self, exception_context: ExceptionContext) -> None:
-        self.message = "All lists must have a closing parenthesis"
+        self.message = "List found is ill-formed"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)

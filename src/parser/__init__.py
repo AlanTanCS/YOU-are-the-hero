@@ -12,6 +12,7 @@ from model.syntax import DEFAULT_NAMESPACES, EntryKeywords, Namespace, SceneKeyw
 from parser.tokenise import get_qualified_name, split_statement, strip_qualified_name
 
 from .entry import parse_global, parse_scene_combat
+from .lists import parse_list_statement
 from .scene import create_node_table, parse_scene_statement
 
 
@@ -63,6 +64,7 @@ def parse_scene(
             combats,
             node_table,
             global_variables,
+            parse_statement,
         )
         result = parse_statement(statement_parse_context)
 
@@ -172,5 +174,9 @@ def parse_statement(statement_parse_context: StatementParseContext) -> list[Toke
         return parse_global(statement_parse_context)
 
     if statement_parse_context.namespace[-1] == Namespace.LIST:
-        pass
-    return []
+        statement_parse_context.line = " ".join(
+            [strip_qualified_name(keyword)]
+            + split_statement(statement_parse_context.line)[1:]
+        )
+        return parse_list_statement(statement_parse_context)
+    raise RuntimeError("Internal error: namespace not assigned")

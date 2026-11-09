@@ -11,7 +11,7 @@ from exceptions import (
 )
 from model.context import SceneStatementParseContext
 from model.story_token import Token
-from model.syntax import ComparisonOperators, SceneKeywords
+from model.syntax import Namespace, SceneKeywords
 from model.value_types import Types
 
 from .tokenise import split_statement, tokenise
@@ -49,56 +49,41 @@ def parse_node(statement_parse_context: SceneStatementParseContext) -> list[Toke
 
 
 def parse_print(statement_parse_context: SceneStatementParseContext) -> list[Token]:
-    arguments = split_statement(statement_parse_context.line)
+    split = split_statement(statement_parse_context.line)
 
-    if len(arguments) != 2:
+    if len(split) != 2:
         raise argument_exception.InvalidNumberOfArgumentsException(
-            statement_parse_context.exception_context, 1, len(arguments)
+            statement_parse_context.exception_context, 1, len(split)
         )
 
-    token_list = tokenise(statement_parse_context.exception_context, arguments[1])
+    tokens = tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.SCENE,
+    )
 
-    if (
-        token_list[0].type is Types.EXPRESSION_START
-        and token_list[-1].type is not Types.EXPRESSION_END
-    ):
-        raise syntax_exception.InvalidExpressionException(
-            statement_parse_context.exception_context
-        )
-
-    return [
-        Token(Types.KEYWORD, SceneKeywords.PRINT, statement_parse_context.namespace[-1])
-    ] + token_list
+    return tokens
 
 
 def parse_if_then(statement_parse_context: SceneStatementParseContext) -> list[Token]:
+
     split = split_statement(statement_parse_context.line)
     if (SceneKeywords.THEN.value) not in split:
         raise syntax_exception.MissingKeywordException(
             statement_parse_context.exception_context, SceneKeywords.THEN
         )
-    raw_condition: list[str] = split[1 : split.index(SceneKeywords.THEN.value)]
+    condition = split[: split.index(SceneKeywords.THEN.value)]
     branch = split[split.index(SceneKeywords.THEN.value) + 1 :]
-    if len(raw_condition) != 3:
+    if len(condition) != 4:
         raise argument_exception.InvalidNumberOfArgumentsException(
-            statement_parse_context.exception_context, 3, len(raw_condition)
+            statement_parse_context.exception_context, 3, len(condition)
         )
-    # remove the operator
-    operator = raw_condition.pop(1)
-    condition: list[Token] = []
-
-    # parse literals
-    for literal in range(len(raw_condition)):
-        typed_word = tokenise(
-            statement_parse_context.exception_context, raw_condition[literal]
-        )
-        condition.append(typed_word[0])
-
-    condition.insert(1, Token(Types.COMPARISON_OPERATOR, ComparisonOperators(operator)))
     if branch[0] not in SceneKeywords:
         raise syntax_exception.UnknownKeywordException(
             statement_parse_context.exception_context, branch[0]
         )
+
+    # TODO after adding a way to check return types, if were returning something then throw and error.
     if (
         branch[0] == SceneKeywords.NODE.value
         or branch[0] == SceneKeywords.SCENE.value
@@ -107,12 +92,21 @@ def parse_if_then(statement_parse_context: SceneStatementParseContext) -> list[T
         raise syntax_exception.InvalidKeywordException(
             statement_parse_context.exception_context, SceneKeywords(branch[0])
         )
+
+    parsed_condition = tokenise(
+        statement_parse_context.exception_context,
+        " ".join(condition),
+        Namespace.SCENE,
+    )
+    if statement_parse_context.dispatch is None:
+        raise RuntimeError("Internal error: dispatch not populated")
+
     statement_parse_context.line = " ".join(branch)
+    parsed_branch = statement_parse_context.dispatch(statement_parse_context)
     return (
-        [Token(Types.KEYWORD, SceneKeywords.IF, statement_parse_context.namespace[-1])]
-        + condition
-        + [Token(Types.KEYWORD, SceneKeywords.THEN)]
-        + parse_scene_statement(statement_parse_context)
+        parsed_condition
+        + [Token(Types.KEYWORD, SceneKeywords.THEN, Namespace.SCENE)]
+        + parsed_branch
     )
 
 
@@ -170,22 +164,24 @@ def parse_goto(statement_parse_context: SceneStatementParseContext) -> list[Toke
 
 
 def parse_input(statement_parse_context: SceneStatementParseContext) -> list[Token]:
-    variable = split_statement(statement_parse_context.line)[1:]
-    if len(variable) > 1:
+    split = split_statement(statement_parse_context.line)
+    if len(split) != 2:
         raise argument_exception.InvalidNumberOfArgumentsException(
-            statement_parse_context.exception_context, 1, len(variable)
+            statement_parse_context.exception_context, 1, len(split)
         )
 
-    token = tokenise(statement_parse_context.exception_context, variable[0])
+    tokens = tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.SCENE,
+    )
 
-    if token[0].type != Types.VARIABLE:
+    if tokens[1].type != Types.VARIABLE:
         raise type_exception.UnexpectedTypeException(
             statement_parse_context.exception_context, ["variable"]
         )
 
-    return [
-        Token(Types.KEYWORD, SceneKeywords.INPUT, statement_parse_context.namespace[-1])
-    ] + token
+    return tokens
 
 
 def parse_set(statement_parse_context: SceneStatementParseContext) -> list[Token]:
@@ -196,30 +192,22 @@ def parse_set(statement_parse_context: SceneStatementParseContext) -> list[Token
         )
 
     variable = split[1]
-    lhs = tokenise(statement_parse_context.exception_context, variable)
-    rhs = tokenise(statement_parse_context.exception_context, split[2])
 
-    if lhs[0].type != Types.VARIABLE:
+    tokens = tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.SCENE,
+    )
+
+    if tokens[1].type != Types.VARIABLE:
         raise variable_exception.InvalidAssignmentTargetException(
             statement_parse_context.exception_context
         )
 
     if variable in statement_parse_context.global_variables:
-        lhs[0].type = Types.GLOBAL_VARIABLE
+        tokens[1].type = Types.GLOBAL_VARIABLE
 
-    if (
-        rhs[0].type is Types.EXPRESSION_START
-        and rhs[-1].type is not Types.EXPRESSION_END
-    ):
-        raise syntax_exception.InvalidExpressionException(
-            statement_parse_context.exception_context
-        )
-
-    return (
-        [Token(Types.KEYWORD, SceneKeywords.SET, statement_parse_context.namespace[-1])]
-        + lhs
-        + rhs
-    )
+    return tokens
 
 
 def parse_then(statement_parse_context: SceneStatementParseContext) -> list[Token]:

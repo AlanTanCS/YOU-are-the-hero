@@ -39,6 +39,10 @@ def main() -> None:
     global_variables = global_init(global_variable_statements, ENTRY_FILE)
     story = Story(scenes, combats, global_variables)
     story_engine = StoryEngine(story)
+    # set_line_and_scene(story_engine, 0, 3)
+    # print(story_engine.story.get_active_scene())
+    # story_engine.step()
+    # print(story_engine.get_current_line())
     story_engine.run()
 
 

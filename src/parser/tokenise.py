@@ -7,7 +7,12 @@ from exceptions import (
     variable_exception,
 )
 from model.story_token import Token
-from model.syntax import ArithmeticOperators, Namespace
+from model.syntax import (
+    KEYWORD_ENUMS,
+    ArithmeticOperators,
+    ComparisonOperators,
+    Namespace,
+)
 from model.value_types import Types
 
 
@@ -74,6 +79,10 @@ def determine_type(exception_context: ExceptionContext, line: str) -> Types:
         return Types.LIST_END
     if line in ArithmeticOperators:
         return Types.ARITHMETIC_OPERATOR
+    if line in ComparisonOperators:
+        return Types.COMPARISON_OPERATOR
+    if is_keyword(line):
+        return Types.KEYWORD
     if line[0] == '"' and line[-1] == '"':
         return Types.STRING
     try:
@@ -88,34 +97,69 @@ def determine_type(exception_context: ExceptionContext, line: str) -> Types:
         raise variable_exception.InvalidVariableNameException(exception_context, line)
 
 
-def tokenise(exception_context: ExceptionContext, line: str) -> list[Token]:
-    type = determine_type(exception_context, line)
-    if type == Types.STRING:
-        return [Token(type, line[1:-1])]
-    if type == Types.EXPRESSION_START or Types.LIST_START:
-        # Check if expression is valid by checking parenthesis
-        delimiters_only = re.sub(r"[^()[\]]", "", line)
-        while re.search(r"\(\)|\[\]", delimiters_only):
-            delimiters_only = re.sub(r"\(\)|\[\]", "", delimiters_only)
-        if delimiters_only:
+def is_keyword(value: str) -> bool:
+    for enum in KEYWORD_ENUMS:
+        try:
+            enum(value)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def get_keyword(value: str):
+    for enum in KEYWORD_ENUMS:
+        try:
+            return enum(value)
+        except ValueError:
+            continue
+
+    raise ValueError(f"Unknown keyword: {value}")
+
+
+def tokenise(
+    exception_context: ExceptionContext, line: str, namespace: Namespace
+) -> list[Token]:
+    elements = re.findall(
+        r'"[^"\n]*"|==|>|<|\(|\)|\[|\]|\+|-|\d+(?:\.\d+)?|[A-Za-z_]\w*(?:\.\w+)*', line
+    )
+    out = []
+    valid_paren = []
+    valid_list = []
+    for element in elements:
+        new_namespace = namespace
+
+        if "." in element and not element.startswith('"'):
+            # We have a qualified name
+            new_namespace = get_qualified_name(exception_context, element)[-1]
+            element = strip_qualified_name(element)
+        type = determine_type(exception_context, element)
+        if type == Types.STRING:
+            out.append(Token(type, element[1:-1]))
+        elif type == Types.ARITHMETIC_OPERATOR:
+            out.append(Token(type, ArithmeticOperators(element)))
+        elif type == Types.COMPARISON_OPERATOR:
+            out.append(Token(type, ComparisonOperators(element)))
+        elif type == Types.KEYWORD:
+            out.append(Token(type, get_keyword(element), new_namespace))
+        else:
             if type == Types.EXPRESSION_START:
-                raise syntax_exception.InvalidExpressionException(exception_context)
-            else:
-                raise syntax_exception.InvalidListException(exception_context)
+                valid_paren.append(type)
+            elif type == Types.EXPRESSION_END:
+                if not valid_paren:
+                    raise syntax_exception.InvalidExpressionException(exception_context)
+                valid_paren.pop()
+            elif type == Types.LIST_START:
+                valid_list.append(type)
+            elif type == Types.LIST_END:
+                if not valid_list:
+                    raise syntax_exception.InvalidListException(exception_context)
+                valid_list.pop()
+            out.append(Token(type, element))
 
-        elements = re.findall(r'"[^"\n]*"|\(|\)|\[|\]|\+|-|\d+|[A-Za-z_]\w*', line)
-        out = []
-        for element in elements:
-            type = determine_type(exception_context, element)
-            if type == Types.STRING:
-                out.append(Token(type, element[1:-1]))
-            elif type == Types.VARIABLE:
-                out.append(Token(type, element))
-            elif type == Types.ARITHMETIC_OPERATOR:
-                out.append(Token(type, ArithmeticOperators(element)))
-            else:
-                out.append(Token(type, element))
+    if valid_paren:
+        raise syntax_exception.InvalidExpressionException(exception_context)
+    if valid_list:
+        raise syntax_exception.InvalidListException(exception_context)
 
-        return out
-    else:
-        return [Token(type, line)]
+    return out

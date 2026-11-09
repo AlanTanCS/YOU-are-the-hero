@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from exceptions import ExceptionContext
@@ -29,3 +30,4 @@ class SceneStatementParseContext(StatementParseContext):
     combats: list[str]
     node_table: dict[str, int]
     global_variables: dict[str, Token]
+    dispatch: Callable[["StatementParseContext"], list[Token]] | None = None
