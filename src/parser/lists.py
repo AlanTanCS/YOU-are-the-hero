@@ -3,8 +3,8 @@ from collections.abc import Callable
 from exceptions import argument_exception
 from model.context import StatementParseContext
 from model.story_token import Token
-from model.syntax import ListKeywords
-from parser.tokenise import split_statement
+from model.syntax import ListKeywords, Namespace
+from parser.tokenise import split_statement, tokenise
 
 
 def parse_get(statement_parse_context: StatementParseContext):
@@ -13,23 +13,40 @@ def parse_get(statement_parse_context: StatementParseContext):
         raise argument_exception.InvalidNumberOfArgumentsException(
             statement_parse_context.exception_context, 2, len(split) - 1
         )
-    # TODO implement later currently we dont allow keywords in expressions...
+
+    return tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.LIST,
+    )
 
 
 def parse_set(statement_parse_context: StatementParseContext):
     split = split_statement(statement_parse_context.line)
-    if len(split) != 3:
+    if len(split) != 4:
         raise argument_exception.InvalidNumberOfArgumentsException(
-            statement_parse_context.exception_context, 2, len(split) - 1
+            statement_parse_context.exception_context, 3, len(split) - 1
         )
+
+    return tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.LIST,
+    )
 
 
 def parse_insert(statement_parse_context: StatementParseContext):
     split = split_statement(statement_parse_context.line)
-    if len(split) != 3:
+    if len(split) != 4:
         raise argument_exception.InvalidNumberOfArgumentsException(
             statement_parse_context.exception_context, 3, len(split) - 1
         )
+
+    return tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.LIST,
+    )
 
 
 def parse_remove(statement_parse_context: StatementParseContext):
@@ -39,13 +56,25 @@ def parse_remove(statement_parse_context: StatementParseContext):
             statement_parse_context.exception_context, 2, len(split) - 1
         )
 
+    return tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.LIST,
+    )
+
 
 def parse_length(statement_parse_context: StatementParseContext):
     split = split_statement(statement_parse_context.line)
-    if len(split) != 3:
+    if len(split) != 2:
         raise argument_exception.InvalidNumberOfArgumentsException(
             statement_parse_context.exception_context, 1, len(split) - 1
         )
+
+    return tokenise(
+        statement_parse_context.exception_context,
+        statement_parse_context.line,
+        Namespace.LIST,
+    )
 
 
 keyword_table: dict[ListKeywords, Callable[[StatementParseContext], list[Token]]] = {

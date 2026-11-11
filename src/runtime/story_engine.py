@@ -68,9 +68,10 @@ class StoryEngine:
                 line,
                 self.story,
                 self.story.get_active_scene().variable_table,
+                handle,
             )
         )
-        if new_loc is not None:
+        if isinstance(new_loc, (int, str)):
             self.set_new_loc(new_loc)
 
     def next_line(self) -> None | int:

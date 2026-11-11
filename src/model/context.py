@@ -14,7 +14,8 @@ class StatementExecutionContext:
     keyword: Token
     line: list[Token]
     story: Story
-    variable_table: dict[str, Token]
+    variable_table: dict[str, Token | list[Token]]
+    dispatch: Callable[["StatementExecutionContext"], None | int | str] | None = None
 
 
 @dataclass

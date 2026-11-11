@@ -29,7 +29,7 @@ class Story:
     def get_scene(self, scene: int | str) -> SceneInfo:
         if isinstance(scene, int):
             return self.cached_scenes[scene]
-
+        print(self.scenes.index(scene))
         return self.cached_scenes[self.scenes.index(scene)]
 
     def get_active_scene(self) -> SceneInfo:

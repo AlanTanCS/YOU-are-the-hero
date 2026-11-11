@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from copy import deepcopy
 
 from model.context import StatementExecutionContext
 from model.story_token import Token
@@ -19,15 +20,33 @@ def handle_print(context: StatementExecutionContext) -> None:
     if argument.type == Types.INTEGER or argument.type == Types.STRING:
         print(argument.value)
     if argument.type == Types.GLOBAL_VARIABLE:
-        print(resolve_value(argument, var_table_copy, context.exception_context).value)
+        print(
+            resolve_value(
+                [argument], var_table_copy, context.exception_context, context
+            ).value
+        )
     if argument.type == Types.VARIABLE:
-        print(resolve_value(argument, var_table_copy, context.exception_context).value)
+        result = deepcopy(
+            resolve_value(
+                [argument], var_table_copy, context.exception_context, context
+            )
+        )
+        if isinstance(result, list):
+            result.pop(0)
+            result.pop()
+            print(" ".join([element.value for element in result]))
+        else:
+            print(result.value)
     if argument.type == Types.EXPRESSION_START:
         print(
             resolve_expression(
-                context.line, var_table_copy, context.exception_context
+                context.line, var_table_copy, context.exception_context, context
             ).value
         )
+    if argument.type == Types.LIST_START:
+        context.line.pop(0)
+        context.line.pop()
+        print(" ".join([element.value for element in context.line]))
 
 
 def handle_if_then(context: StatementExecutionContext) -> None | int | str:
@@ -42,14 +61,30 @@ def handle_if_then(context: StatementExecutionContext) -> None | int | str:
     result = False
     for i in range(len(condition)):
         if condition[i].type == Types.COMPARISON_OPERATOR:
+            lhs = condition[i - 1]
+            rhs = condition[i + 1]
+            if condition[0].type == Types.EXPRESSION_START:
+                lhs = resolve_expression(
+                    condition[:i],
+                    context.variable_table,
+                    context.exception_context,
+                    context,
+                )
+            if condition[i + 1].type == Types.EXPRESSION_START:
+                rhs = resolve_expression(
+                    condition[:i],
+                    context.variable_table,
+                    context.exception_context,
+                    context,
+                )
             result = handle_comparison_operators(
                 condition[i],
-                condition[i - 1],
-                condition[i + 1],
+                lhs,
+                rhs,
                 context.variable_table,
                 context.exception_context,
+                context,
             )
-
     if result:
         context.keyword = branch[0]
         context.line = branch
@@ -74,9 +109,16 @@ def handle_input(context: StatementExecutionContext) -> None:
 def handle_set(context: StatementExecutionContext) -> None:
     var_table_copy = dict(context.variable_table)
     var_table_copy.update(context.story.global_variables)
+
+    # Lists
+    if context.line[1].type == Types.LIST_START:
+        context.variable_table[context.line[0].value] = context.line[1:]
+        return
+
+    # Literals
     if context.line[1].type != Types.EXPRESSION_START:
         resolved = resolve_value(
-            context.line[1], var_table_copy, context.exception_context
+            [context.line[1]], var_table_copy, context.exception_context, context
         )
         if context.line[0].value in context.story.global_variables:
             context.story.global_variables[context.line[0].value] = resolved
@@ -86,7 +128,7 @@ def handle_set(context: StatementExecutionContext) -> None:
 
     # we have an expression
     result = resolve_expression(
-        context.line[1:], var_table_copy, context.exception_context
+        context.line[1:], var_table_copy, context.exception_context, context
     )
     if context.line[0].type == Types.VARIABLE:
         context.variable_table[context.line[0].value] = result

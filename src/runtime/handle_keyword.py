@@ -1,12 +1,14 @@
 from model.context import StatementExecutionContext
 from model.syntax import Namespace
 from runtime.entry_keyword_handlers import handle_global
+from runtime.list_keyword_handlers import handle_keyword as handle_list_keyword
 
 from .scene_keyword_handlers import handle_keyword as handle_scene_keyword
 
 keyword_handlers = {
     Namespace.SCENE: handle_scene_keyword,
     Namespace.ENTRY: handle_global,
+    Namespace.LIST: handle_list_keyword,
 }
 
 

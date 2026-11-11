@@ -1,14 +1,13 @@
-//INPUT choice
-//IF choice == "1" THEN GOTO NODE intro
-//SET variable (1, 2, 3)
-SET test (LIST.GET)
-//LIST.SET test 2
-//SET testing (LIST.GET test 1)
-//PRINT testing
-// PRINT LIST.GET test 1
-//LIST.SET test "hi"
-//PRINT "Hello world!"
-//PRINT testingVar
-//ENTRY.GLOBAL testingIfthisWORKs 1000
+SET testList [1, 2,3 ]
+PRINT (LIST.GET testList 2)
+LIST.SET testList 2 "string"
+PRINT ((LIST.LENGTH testList))
+LIST.INSERT testList 3 50
+L
+PRINT testList
+PRINT ((LIST.LENGTH testList))
+
+
+
 
 //GOTO SCENE Scene2
