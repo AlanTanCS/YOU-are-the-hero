@@ -36,3 +36,14 @@ class NamespaceNotFoundException(ReferenceException):
         self.message = f"Cannot find the referenced namespace: {namespace}"
         self.message += report_error_info(exception_context)
         super().__init__(self.message)
+
+
+class IndexOutOfBoundsException(ReferenceException):
+    """Exception raised when the index attempting to be accessed is out of bounds."""
+
+    def __init__(
+        self, exception_context: ExceptionContext, index: int, length: int
+    ) -> None:
+        self.message = f"Cannot access index {index} from a list of length {length}"
+        self.message += report_error_info(exception_context)
+        super().__init__(self.message)

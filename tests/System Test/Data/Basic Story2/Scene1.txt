@@ -1,12 +1,12 @@
-SET testList [1, 2,3 ]
-PRINT (LIST.GET testList 2)
+SET testList [1, 20,3 ]
+PRINT (LIST.GET testList (1 + 0))
 LIST.SET testList 2 "string"
-PRINT ((LIST.LENGTH testList))
-LIST.INSERT testList 3 50
-L
 PRINT testList
 PRINT ((LIST.LENGTH testList))
-
+LIST.INSERT testList 2 50
+PRINT ((LIST.LENGTH testList))
+PRINT testList
+IF (LIST.GET testList 2) == "string" THEN PRINT "hi"
 
 
 

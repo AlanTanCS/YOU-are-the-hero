@@ -1,11 +1,12 @@
 from collections.abc import Callable
 from copy import deepcopy
 
+from exceptions.reference_exception import IndexOutOfBoundsException
 from model.context import StatementExecutionContext
 from model.story_token import Token
 from model.syntax import ListKeywords
 from model.value_types import Types
-from runtime.operator_handlers import resolve_value
+from runtime.operator_handlers import resolve_expression, resolve_value
 
 
 def get_raw_list(context: StatementExecutionContext):
@@ -18,7 +19,6 @@ def get_raw_list(context: StatementExecutionContext):
             context.exception_context,
             context,
         )
-
     elif target.type == Types.LIST_START:
         returned_list = context.line[:-1]
     else:
@@ -32,15 +32,20 @@ def get_raw_list(context: StatementExecutionContext):
 def handle_get(context: StatementExecutionContext):
     raw_list = get_raw_list(context)
 
-    index = context.line[-1]
+    index = context.line[1]
+    if index.type == Types.EXPRESSION_START:
+        index = resolve_expression(
+            context.line[1:], context.variable_table, context.exception_context, context
+        )
 
     if index.type != Types.INTEGER:
         raise RuntimeError(
             "Internal error: We should not have parsed a non-integer at this point."
         )
     if int(index.value) > len(raw_list) - 3:
-        # TODO
-        raise RuntimeError("Custom exxception for accessing out of bounds!")
+        raise IndexOutOfBoundsException(
+            context.exception_context, int(index.value), len(raw_list) - 2
+        )
     return raw_list[int(index.value) + 1]
 
 
@@ -58,8 +63,9 @@ def handle_set(context: StatementExecutionContext):
             "Internal error: We should not have parsed a non-integer at this point."
         )
     if int(index.value) > len(raw_list) - 3:
-        # TODO
-        raise RuntimeError("Custom exxception for accessing out of bounds!")
+        raise IndexOutOfBoundsException(
+            context.exception_context, int(index.value), len(raw_list) - 2
+        )
 
     raw_list[int(index.value) + 1] = new_value
 
@@ -78,8 +84,9 @@ def handle_insert(context: StatementExecutionContext):
             "Internal error: We should not have parsed a non-integer at this point."
         )
     if int(index.value) > len(raw_list) - 2:
-        # TODO
-        raise RuntimeError("Custom exxception for accessing out of bounds!")
+        raise IndexOutOfBoundsException(
+            context.exception_context, int(index.value), len(raw_list) - 2
+        )
 
     raw_list.insert(int(index.value) + 1, new_value)
 
@@ -97,8 +104,9 @@ def handle_remove(context: StatementExecutionContext):
             "Internal error: We should not have parsed a non-integer at this point."
         )
     if int(index.value) > len(raw_list) - 2:
-        # TODO
-        raise RuntimeError("Custom exxception for accessing out of bounds!")
+        raise IndexOutOfBoundsException(
+            context.exception_context, int(index.value), len(raw_list) - 2
+        )
 
     raw_list.pop(int(index.value) + 1)
 
