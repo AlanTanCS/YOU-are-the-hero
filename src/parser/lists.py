@@ -89,5 +89,6 @@ keyword_table: dict[ListKeywords, Callable[[StatementParseContext], list[Token]]
 def parse_list_statement(
     statement_parse_context: StatementParseContext,
 ) -> list[Token]:
-    enum_value = ListKeywords(split_statement(statement_parse_context.line)[0])
-    return keyword_table[enum_value](statement_parse_context)
+    pass
+    # enum_value = ListKeywords(split_statement(statement_parse_context.line)[0])
+    # return keyword_table[enum_value](statement_parse_context)

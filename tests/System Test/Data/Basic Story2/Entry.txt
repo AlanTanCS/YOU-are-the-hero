@@ -1,3 +1,2 @@
 // GLOBAL testingVar 100
-
 SCENE_LIST [Scene1, Scene2]

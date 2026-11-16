@@ -6,6 +6,8 @@ from model.story import Story
 from parser import parse_entry_point
 from runtime.initialise_global_variables import global_init
 from runtime.story_engine import StoryEngine
+from scanner import scan_entry_point
+from semantic.entry_analyser import EntrySemanticAnalyser
 
 
 def handle_arguments() -> str:
@@ -35,15 +37,21 @@ def find_entry_file(file_path: str) -> str:
 def main() -> None:
     entry = handle_arguments()
     ENTRY_FILE = find_entry_file(entry)
-    scenes, combats, global_variable_statements = parse_entry_point(ENTRY_FILE)
-    global_variables = global_init(global_variable_statements, ENTRY_FILE)
-    story = Story(scenes, combats, global_variables)
-    story_engine = StoryEngine(story)
+    entry_lines = scan_entry_point(ENTRY_FILE)
+    ast_tree = parse_entry_point(entry_lines, ENTRY_FILE)
+    print(ast_tree)
+    ast_visitor = EntrySemanticAnalyser()
+    ast_visitor.analyse(ast_tree)
+
+    # scenes, combats, global_variable_statements = parse_entry_point(ENTRY_FILE)
+    # global_variables = global_init(global_variable_statements, ENTRY_FILE)
+    # story = Story(scenes, combats, global_variables)
+    # story_engine = StoryEngine(story)
     # set_line_and_scene(story_engine, 0, 3)
     # print(story_engine.story.get_active_scene())
     # story_engine.step()
     # print(story_engine.get_current_line())
-    story_engine.run()
+    # story_engine.run()
 
 
 if __name__ == "__main__":

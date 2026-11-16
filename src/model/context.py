@@ -21,8 +21,7 @@ class StatementExecutionContext:
 @dataclass
 class StatementParseContext:
     exception_context: ExceptionContext
-    line: str
-    namespace: list[Namespace]
+    line: list[Token]
 
 
 @dataclass

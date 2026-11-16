@@ -232,5 +232,6 @@ keyword_table: dict[
 def parse_scene_statement(
     statement_parse_context: SceneStatementParseContext,
 ) -> list[Token]:
-    enum_value = SceneKeywords(split_statement(statement_parse_context.line)[0])
-    return keyword_table[enum_value](statement_parse_context)
+    pass
+    # enum_value = SceneKeywords(split_statement(statement_parse_context.line)[0])
+    # return keyword_table[enum_value](statement_parse_context)

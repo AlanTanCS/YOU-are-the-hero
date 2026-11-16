@@ -6,12 +6,15 @@ from exceptions import (
     reference_exception,
     syntax_exception,
 )
+from model.ast_nodes import EntryFile, SceneFile, Story
+from model.ast_nodes.entry import EntryStatement
 from model.context import SceneStatementParseContext, StatementParseContext
 from model.story_token import Token
 from model.syntax import DEFAULT_NAMESPACES, EntryKeywords, Namespace, SceneKeywords
+from model.value_types import Types
 from parser.tokenise import get_qualified_name, split_statement, strip_qualified_name
 
-from .entry import parse_global, parse_scene_combat
+from .entry import parse_entry_statement, parse_global
 from .lists import parse_list_statement
 from .scene import create_node_table, parse_scene_statement
 
@@ -73,69 +76,110 @@ def parse_scene(
     return line_indexes, end_line, node_table
 
 
-def parse_entry_point(
-    entry_path: str,
-) -> tuple[list[str], list[str], dict[int, list[Token]]]:
+namespace_table = {
+    Namespace.ENTRY: parse_entry_statement,
+    Namespace.SCENE: parse_scene_statement,
+    Namespace.LIST: parse_list_statement,
+}
+
+
+def parse_entry_point(entry_lines: dict[int, list[Token]], entry_path: str):
+
     exception_context = ExceptionContext(entry_path)
+    entry_file = EntryFile([])
+    ast_tree = Story(entry_file, [])
 
-    scenes = []
-    combats = []
-    line_indexes = {}
-    global_variable_statements = {}
-
-    with open(entry_path) as story_data:
-        for i, line in enumerate(story_data):
-            exception_context.line_number = i + 1
-            line = line.strip()
-            if line == "" or line[:2] == "//":
-                continue
-            if line.split()[0] in SceneKeywords:
-                raise syntax_exception.InvalidKeywordException(
-                    exception_context, SceneKeywords(line.split()[0])
-                )
-            if line.split()[0] not in EntryKeywords:
-                raise syntax_exception.UnknownKeywordException(
-                    exception_context, line.split()[0]
-                )
-            line_indexes[i + 1] = line
-
-    for line_number, line in line_indexes.items():
+    for line_number, line in entry_lines.items():
         exception_context.line_number = line_number
-        enum_value = EntryKeywords(line.split()[0])
-        scenes_res, combats_res, result = [], [], []
-        if enum_value == EntryKeywords.SCENE_LIST:
-            scenes_res = parse_scene_combat(exception_context, line)
-        if enum_value == EntryKeywords.COMBAT_LIST:
-            combats_res = parse_scene_combat(exception_context, line)
-        if enum_value == EntryKeywords.GLOBAL:
-            context = StatementParseContext(exception_context, line, [Namespace.ENTRY])
-            result = parse_statement(context)
-
-        if scenes_res != [] and scenes != []:
-            raise declaration_exception.AlreadyDeclaredException(
-                exception_context, EntryKeywords.SCENE_LIST
+        if line[0].type != Types.KEYWORD:
+            raise syntax_exception.UnknownKeywordException(
+                exception_context, line[0].value
             )
-        if combats_res != [] and combats != []:
-            raise declaration_exception.AlreadyDeclaredException(
-                exception_context, EntryKeywords.COMBAT_LIST
+
+        if line[0].namespace is None:
+            raise RuntimeError(
+                "Internal error: Cannot have a keyword without assigned namespace"
             )
-        scenes += scenes_res
-        combats += combats_res
 
-        if result != []:
-            global_variable_statements[line_number] = result
+        parse_context = StatementParseContext(exception_context, line)
+        statement = EntryStatement(namespace_table[line[0].namespace](parse_context))
+        statement.set_line_number(line_number)
+        entry_file.entry_statement.append(statement)
 
-    for scene in scenes:
-        path = os.path.join(os.getcwd(), f"{scene}.txt")
-        if not os.path.isfile(path):
-            raise FileNotFoundError(path)
+    entry_file.set_file(entry_path)
 
-    for combat in combats:
-        path = os.path.join(os.getcwd(), f"{combat}.txt")
-        if not os.path.isfile(path):
-            raise FileNotFoundError(path)
+    return ast_tree
 
-    return scenes, combats, global_variable_statements
+
+# def parse_entry_point(
+#     entry_path: str,
+# ) -> tuple[list[str], list[str], dict[int, list[Token]]]:
+#     exception_context = ExceptionContext(entry_path)
+
+#     scenes = []
+#     combats = []
+#     line_indexes = {}
+#     global_variable_statements = {}
+
+#     with open(entry_path) as story_data:
+#         for i, line in enumerate(story_data):
+#             print(line)
+#         pass
+
+
+#     with open(entry_path) as story_data:
+#         for i, line in enumerate(story_data):
+#             exception_context.line_number = i + 1
+#             line = line.strip()
+#             if line == "" or line[:2] == "//":
+#                 continue
+#             if line.split()[0] in SceneKeywords:
+#                 raise syntax_exception.InvalidKeywordException(
+#                     exception_context, SceneKeywords(line.split()[0])
+#                 )
+#             if line.split()[0] not in EntryKeywords:
+#                 raise syntax_exception.UnknownKeywordException(
+#                     exception_context, line.split()[0]
+#                 )
+#             line_indexes[i + 1] = line
+
+#     for line_number, line in line_indexes.items():
+#         exception_context.line_number = line_number
+#         enum_value = EntryKeywords(line.split()[0])
+#         scenes_res, combats_res, result = [], [], []
+#         if enum_value == EntryKeywords.SCENE_LIST:
+#             scenes_res = parse_scene_combat(exception_context, line)
+#         if enum_value == EntryKeywords.COMBAT_LIST:
+#             combats_res = parse_scene_combat(exception_context, line)
+#         if enum_value == EntryKeywords.GLOBAL:
+#             context = StatementParseContext(exception_context, line, [Namespace.ENTRY])
+#             result = parse_statement(context)
+
+#         if scenes_res != [] and scenes != []:
+#             raise declaration_exception.AlreadyDeclaredException(
+#                 exception_context, EntryKeywords.SCENE_LIST
+#             )
+#         if combats_res != [] and combats != []:
+#             raise declaration_exception.AlreadyDeclaredException(
+#                 exception_context, EntryKeywords.COMBAT_LIST
+#             )
+#         scenes += scenes_res
+#         combats += combats_res
+
+#         if result != []:
+#             global_variable_statements[line_number] = result
+
+#     for scene in scenes:
+#         path = os.path.join(os.getcwd(), f"{scene}.txt")
+#         if not os.path.isfile(path):
+#             raise FileNotFoundError(path)
+
+#     for combat in combats:
+#         path = os.path.join(os.getcwd(), f"{combat}.txt")
+#         if not os.path.isfile(path):
+#             raise FileNotFoundError(path)
+
+#     return scenes, combats, global_variable_statements
 
 
 def validate_namespace_children(
@@ -148,35 +192,35 @@ def validate_namespace_children(
         prev = i
 
 
-def parse_statement(statement_parse_context: StatementParseContext) -> list[Token]:
-    keyword = split_statement(statement_parse_context.line)[0]
-    statement_parse_context.namespace += get_qualified_name(
-        statement_parse_context.exception_context, keyword
-    )
-    validate_namespace_children(
-        statement_parse_context.namespace, statement_parse_context.exception_context
-    )
+# def parse_statement(statement_parse_context: StatementParseContext) -> list[Token]:
+#     keyword = split_statement(statement_parse_context.line)[0]
+#     statement_parse_context.namespace += get_qualified_name(
+#         statement_parse_context.exception_context, keyword
+#     )
+#     validate_namespace_children(
+#         statement_parse_context.namespace, statement_parse_context.exception_context
+#     )
 
-    if statement_parse_context.namespace[-1] == Namespace.SCENE:
-        if not isinstance(statement_parse_context, SceneStatementParseContext):
-            raise RuntimeError("Internal error, namespace not properly parsed.")
-        statement_parse_context.line = " ".join(
-            [strip_qualified_name(keyword)]
-            + split_statement(statement_parse_context.line)[1:]
-        )
-        return parse_scene_statement(statement_parse_context)
+#     if statement_parse_context.namespace[-1] == Namespace.SCENE:
+#         if not isinstance(statement_parse_context, SceneStatementParseContext):
+#             raise RuntimeError("Internal error, namespace not properly parsed.")
+#         statement_parse_context.line = " ".join(
+#             [strip_qualified_name(keyword)]
+#             + split_statement(statement_parse_context.line)[1:]
+#         )
+#         return parse_scene_statement(statement_parse_context)
 
-    if statement_parse_context.namespace[-1] == Namespace.ENTRY:
-        statement_parse_context.line = " ".join(
-            [strip_qualified_name(keyword)]
-            + split_statement(statement_parse_context.line)[1:]
-        )
-        return parse_global(statement_parse_context)
+#     if statement_parse_context.namespace[-1] == Namespace.ENTRY:
+#         statement_parse_context.line = " ".join(
+#             [strip_qualified_name(keyword)]
+#             + split_statement(statement_parse_context.line)[1:]
+#         )
+#         return parse_global(statement_parse_context)
 
-    if statement_parse_context.namespace[-1] == Namespace.LIST:
-        statement_parse_context.line = " ".join(
-            [strip_qualified_name(keyword)]
-            + split_statement(statement_parse_context.line)[1:]
-        )
-        return parse_list_statement(statement_parse_context)
-    raise RuntimeError("Internal error: namespace not assigned")
+#     if statement_parse_context.namespace[-1] == Namespace.LIST:
+#         statement_parse_context.line = " ".join(
+#             [strip_qualified_name(keyword)]
+#             + split_statement(statement_parse_context.line)[1:]
+#         )
+#         return parse_list_statement(statement_parse_context)
+#     raise RuntimeError("Internal error: namespace not assigned")
