@@ -77,7 +77,6 @@ class StoryEngine:
     #         self.set_new_loc(new_loc)
 
     def handle_statement(self, statement: ASTNode) -> None:
-        # TODO dispatch to handler
         if statement.file is None:
             raise RuntimeError("Internal error: Statement has no associated file")
         exception_context = ExceptionContext(statement.file, statement.line_number)

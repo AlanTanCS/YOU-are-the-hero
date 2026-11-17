@@ -1,5 +1,5 @@
 // SCENE.SET test2 20
-GLOBAL test (1 + 1)
+GLOBAL test [1, 1, [(50 + 2)], 2, 3]
 // GLOBAL tobeset test
 // GLOBAL expressiontest (100 + 200 + 300 + health)
 // GLOBAL currenthealth 200

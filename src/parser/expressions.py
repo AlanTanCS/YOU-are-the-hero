@@ -16,8 +16,9 @@ Operand = BinaryExpression | ExpressionValue
 def parse_expression(
     tokens: list[Token], position: int, exception_context: ExceptionContext
 ) -> tuple[Expression, int]:
-    node, position = parse_additive_expr(tokens, position, exception_context)
-    return Expression(node), position
+
+    expression, position = parse_additive_expr(tokens, position, exception_context)
+    return Expression(expression), position
 
 
 def parse_additive_expr(

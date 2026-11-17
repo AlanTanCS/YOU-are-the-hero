@@ -8,7 +8,7 @@ from exceptions import (
 from model.ast_nodes import ASTNode
 from model.ast_nodes.collections import NameList
 from model.ast_nodes.entry import CombatList, GlobalDeclaration, SceneList
-from model.ast_nodes.primatives import Identifier, Name, String
+from model.ast_nodes.primatives import Identifier, Name
 from model.ast_nodes.values import Value
 from model.context import StatementParseContext
 from model.syntax import EntryKeywords
@@ -62,7 +62,6 @@ def parse_combat_list(statement_parse_context: StatementParseContext) -> CombatL
 
 
 def parse_global(statement_parse_context: StatementParseContext) -> GlobalDeclaration:
-    # TODO missing expressions
     if statement_parse_context.line[1].type != Types.VARIABLE:
         raise type_exception.UnexpectedTypeException(
             statement_parse_context.exception_context, [Types.VARIABLE]
@@ -70,13 +69,13 @@ def parse_global(statement_parse_context: StatementParseContext) -> GlobalDeclar
     target = statement_parse_context.line[2:]
     if target[0].type == Types.LIST_START:
         target.pop(0)
-        target = parse_list_literal(
+        target, _ = parse_list_literal(
             target, 0, statement_parse_context.exception_context
         )
     elif target[0].type == Types.EXPRESSION_START:
-        test, _ = parse_expression(target, 0, statement_parse_context.exception_context)
-        print(test)
-        target = String("test")
+        target, _ = parse_expression(
+            target, 0, statement_parse_context.exception_context
+        )
     else:
         if len(statement_parse_context.line) != 3:
             raise argument_exception.InvalidNumberOfArgumentsException(
