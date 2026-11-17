@@ -1,6 +1,7 @@
 import os
 
 from exceptions import ExceptionContext, reference_exception
+from model.ast_nodes import ASTNode
 from model.context import StatementExecutionContext
 from model.story import SceneInfo, Story
 from model.story_token import Token
@@ -10,22 +11,23 @@ from runtime.handle_keyword import handle_keyword as handle
 
 class StoryEngine:
     def __init__(self, story: Story) -> None:
+        self.statement_number = 0
         self.loc = 0
         self.story = story
 
-    def get_file_scene_info(self, file_name: str) -> SceneInfo:
-        file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
-        if not os.path.isfile(file_path):
-            raise FileNotFoundError(file_path)
+    # def get_file_scene_info(self, file_name: str) -> SceneInfo:
+    #     file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
+    #     if not os.path.isfile(file_path):
+    #         raise FileNotFoundError(file_path)
 
-        line_indexes, end_line, node_table = parse_scene(
-            file_path,
-            self.story.scenes,
-            self.story.combats,
-            self.story.global_variables,
-        )
-        scene_info = SceneInfo(line_indexes, end_line, node_table, file_path)
-        return scene_info
+    #     line_indexes, end_line, node_table = parse_scene(
+    #         file_path,
+    #         self.story.scenes,
+    #         self.story.combats,
+    #         self.story.global_variables,
+    #     )
+    #     scene_info = SceneInfo(line_indexes, end_line, node_table, file_path)
+    #     return scene_info
 
     def get_current_line_number(self) -> int:
         return self.loc
@@ -43,72 +45,94 @@ class StoryEngine:
         else:
             return None
 
-    def set_new_loc(self, new_loc: int | str) -> None:
-        if isinstance(new_loc, int):
-            self.set_current_line_number(new_loc)
-        else:
-            self.set_scene(self.story.get_scene(new_loc))
+    # def set_new_loc(self, new_loc: int | str) -> None:
+    #     if isinstance(new_loc, int):
+    #         self.set_current_line_number(new_loc)
+    #     else:
+    #         self.set_scene(self.story.get_scene(new_loc))
 
-    def set_scene(self, scene_info: SceneInfo) -> None:
-        self.loc = 0
-        self.story.scene_info = scene_info
+    # def set_scene(self, scene_info: SceneInfo) -> None:
+    #     self.loc = 0
+    #     self.story.scene_info = scene_info
 
-    def handle_keyword(self, keyword: Token | None, line: list[Token]) -> None:
-        # keyword will be None if we're looking at a line thats empty
-        if keyword is None:
-            return
+    # def handle_keyword(self, keyword: Token | None, line: list[Token]) -> None:
+    #     # keyword will be None if we're looking at a line thats empty
+    #     if keyword is None:
+    #         return
 
-        exception_context = ExceptionContext(
-            self.story.get_active_scene().file_path, self.get_current_line_number()
+    #     exception_context = ExceptionContext(
+    #         self.story.get_active_scene().file_path, self.get_current_line_number()
+    #     )
+    #     new_loc = handle(
+    #         StatementExecutionContext(
+    #             exception_context,
+    #             keyword,
+    #             line,
+    #             self.story,
+    #             self.story.get_active_scene().variable_table,
+    #             handle,
+    #         )
+    #     )
+    #     if isinstance(new_loc, (int, str)):
+    #         self.set_new_loc(new_loc)
+
+    def handle_statement(self, statement: ASTNode) -> None:
+        # TODO dispatch to handler
+        if statement.file is None:
+            raise RuntimeError("Internal error: Statement has no associated file")
+        exception_context = ExceptionContext(statement.file, statement.line_number)
+        execution_context = StatementExecutionContext(
+            exception_context, self.story, statement, handle
         )
-        new_loc = handle(
-            StatementExecutionContext(
-                exception_context,
-                keyword,
-                line,
-                self.story,
-                self.story.get_active_scene().variable_table,
-                handle,
-            )
-        )
-        if isinstance(new_loc, (int, str)):
-            self.set_new_loc(new_loc)
+        handle(execution_context)
 
     def next_line(self) -> None | int:
-        if self.loc < self.story.get_active_scene().end_line:
-            self.loc += 1
-        else:
-            # End of file
-            self.loc = 0
+        if self.story.scene_info is None:
+            raise RuntimeError("Internal error: No active scene set")
+        self.statement_number += 1
+        if self.statement_number >= len(self.story.scene_info.line_indexes):
             return -1
+
+    def step(self) -> None | int:
+        if self.story.scene_info is None:
+            raise RuntimeError("Internal error: No active scene set")
+
+        self.handle_statement(self.story.scene_info.line_indexes[self.statement_number])
+        return self.next_line()
+
+    def run_entry(self) -> int:
+        entry_file = self.story.tree.entry_file
+        self.story.scene_info = SceneInfo(
+            entry_file.entry_statements, {}, entry_file.file, {}
+        )
+
+        while True:
+            if self.step() == -1:
+                return -1
 
     def run_scene(self) -> int:
         while True:
             if self.step() == -1:
                 return -1
 
-    def step(self) -> None | int:
-        self.handle_keyword(self.get_current_keyword(), self.get_current_line())
-        return self.next_line()
+    # def validate_story(self) -> None:
+    #     self.story.cached_scenes = [
+    #         self.get_file_scene_info(scene) for scene in self.story.scenes
+    #     ]
+    #     if self.story.cached_scenes == []:
+    #         raise reference_exception.ScenesNotFoundException()
+    #     self.story.scene_info = None
 
-    def validate_story(self) -> None:
-        self.story.cached_scenes = [
-            self.get_file_scene_info(scene) for scene in self.story.scenes
-        ]
-        if self.story.cached_scenes == []:
-            raise reference_exception.ScenesNotFoundException()
-        self.story.scene_info = None
+    # def run(self) -> None:
+    #     self.validate_story()
+    #     # initial scene
+    #     initial_scene = self.story.get_scene(0)
+    #     if isinstance(initial_scene, SceneInfo):
+    #         self.set_scene(initial_scene)
+    #     else:
+    #         self.set_scene(self.get_file_scene_info(initial_scene))
 
-    def run(self) -> None:
-        self.validate_story()
-        # initial scene
-        initial_scene = self.story.get_scene(0)
-        if isinstance(initial_scene, SceneInfo):
-            self.set_scene(initial_scene)
-        else:
-            self.set_scene(self.get_file_scene_info(initial_scene))
-
-        # execute scene and then move onto next
-        while True:
-            if self.run_scene() == -1:
-                break
+    #     # execute scene and then move onto next
+    #     while True:
+    #         if self.run_scene() == -1:
+    #             break

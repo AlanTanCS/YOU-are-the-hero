@@ -3,6 +3,7 @@ from collections.abc import Callable
 from exceptions import (
     argument_exception,
     syntax_exception,
+    type_exception,
 )
 from model.ast_nodes import ASTNode
 from model.ast_nodes.collections import NameList
@@ -13,6 +14,7 @@ from model.context import StatementParseContext
 from model.syntax import EntryKeywords
 from model.value_types import Types
 from parser.collections import parse_list_literal
+from parser.expressions import parse_expression
 from parser.primatives import parse_primative
 
 
@@ -61,6 +63,10 @@ def parse_combat_list(statement_parse_context: StatementParseContext) -> CombatL
 
 def parse_global(statement_parse_context: StatementParseContext) -> GlobalDeclaration:
     # TODO missing expressions
+    if statement_parse_context.line[1].type != Types.VARIABLE:
+        raise type_exception.UnexpectedTypeException(
+            statement_parse_context.exception_context, [Types.VARIABLE]
+        )
     target = statement_parse_context.line[2:]
     if target[0].type == Types.LIST_START:
         target.pop(0)
@@ -68,6 +74,8 @@ def parse_global(statement_parse_context: StatementParseContext) -> GlobalDeclar
             target, 0, statement_parse_context.exception_context
         )
     elif target[0].type == Types.EXPRESSION_START:
+        test, _ = parse_expression(target, 0, statement_parse_context.exception_context)
+        print(test)
         target = String("test")
     else:
         if len(statement_parse_context.line) != 3:

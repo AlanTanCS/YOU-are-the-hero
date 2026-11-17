@@ -8,7 +8,7 @@ from model.ast_nodes import ASTNode
 
 if TYPE_CHECKING:
     from model.ast_nodes.entry import EntryAction
-    from model.ast_nodes.list import ListStatement
+    from model.ast_nodes.listnodes import ListStatement
     from model.ast_nodes.primatives import Identifier, Name
     from model.ast_nodes.values import Comparison, Value
 

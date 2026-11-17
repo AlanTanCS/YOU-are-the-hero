@@ -8,9 +8,24 @@ from model.ast_nodes import ASTNode
 
 if TYPE_CHECKING:
     from model.ast_nodes.collections import ListLiteral
-    from model.ast_nodes.list import ListGet, ListLength
-    from model.ast_nodes.operators import ComparisonOperator
+    from model.ast_nodes.listnodes import ListGet, ListLength
     from model.ast_nodes.primatives import Identifier, Integer, String
+
+
+class ArithmeticOperator(StrEnum):
+    ADD = "+"
+    SUB = "-"
+
+
+class MultiplicationOperator(StrEnum):
+    MULT = "*"
+    DIV = "/"
+
+
+class ComparisonOperator(StrEnum):
+    EQUALS = "=="
+    GREATER = ">"
+    LESS = "<"
 
 
 @dataclass
@@ -23,16 +38,11 @@ class Expression(ASTNode):
     value: ExpressionValue | BinaryExpression | None
 
 
-class ArithmeticOperator(StrEnum):
-    ADD = "+"
-    SUB = "-"
-
-
 @dataclass
 class BinaryExpression(ASTNode):
-    left: ExpressionValue
-    operator: ArithmeticOperator
-    right: ExpressionValue
+    left: ExpressionValue | BinaryExpression
+    operator: ArithmeticOperator | MultiplicationOperator
+    right: ExpressionValue | BinaryExpression
 
 
 @dataclass

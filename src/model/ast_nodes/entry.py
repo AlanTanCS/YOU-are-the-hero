@@ -7,7 +7,7 @@ from model.ast_nodes import ASTNode
 
 if TYPE_CHECKING:
     from model.ast_nodes.collections import NameList
-    from model.ast_nodes.list import ListStatement
+    from model.ast_nodes.listnodes import ListStatement
     from model.ast_nodes.primatives import Identifier
     from model.ast_nodes.scene import SceneAction
     from model.ast_nodes.values import Value
@@ -35,5 +35,5 @@ class CombatList(ASTNode):
 
 @dataclass
 class GlobalDeclaration(ASTNode):
-    identifier: Identifier
-    value: Value
+    target: Identifier
+    source: Value

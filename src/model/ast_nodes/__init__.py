@@ -23,8 +23,7 @@ class ASTNode:
 
             elif isinstance(value, list):
                 for item in value:
-                    if isinstance(item, ASTNode):
-                        item.set_file(file)
+                    item.set_file(file)
 
     def set_line_number(self, line_number: int | None):
         self.line_number = line_number
@@ -41,7 +40,7 @@ class ASTNode:
 
 @dataclass
 class EntryFile(ASTNode):
-    entry_statement: list[EntryStatement]
+    entry_statements: list[EntryStatement]
 
 
 @dataclass
@@ -50,6 +49,6 @@ class SceneFile(ASTNode):
 
 
 @dataclass
-class Story(ASTNode):
+class StoryNode(ASTNode):
     entry_file: EntryFile
     scene_files: list[SceneFile]

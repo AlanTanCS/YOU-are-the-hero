@@ -9,6 +9,7 @@ class Types(StrEnum):
     KEYWORD = "<keyword>"
     LOCATION = "<location>"
     ARITHMETIC_OPERATOR = "<arithmetic_operator>"
+    MULTIPLICATION_OPERATOR = "<multiplication_operator>"
     COMPARISON_OPERATOR = "<comparison_operator>"
     EXPRESSION_START = "<expr_start>"
     EXPRESSION_END = "<expr_end>"

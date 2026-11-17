@@ -1,20 +1,21 @@
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Generic, TypeVar
 
 from exceptions import ExceptionContext
+from model.ast_nodes import ASTNode
 from model.story import Story
-from model.syntax import Namespace
 
 from .story_token import Token
 
+T = TypeVar("T", bound=ASTNode)
+
 
 @dataclass
-class StatementExecutionContext:
+class StatementExecutionContext(Generic[T]):
     exception_context: ExceptionContext
-    keyword: Token
-    line: list[Token]
     story: Story
-    variable_table: dict[str, Token | list[Token]]
+    statement: T
     dispatch: Callable[["StatementExecutionContext"], None | int | str] | None = None
 
 

@@ -29,7 +29,9 @@ list_remove             = "REMOVE", ( Identifier | ListLiteral ), list_index ;
 list_length             = "LENGTH", ( Identifier | ListLiteral ) ;
 
 function                = list_get | list_length ;
-expression              = "(", [ expression_value, { arithmetic_operator, expression_value }, ] ")" ;
+expression              = "(", [ additive_expression ], ")" ;
+additive_expression     = mult_expression, { arithmetic_operator, mult_expression } ;
+mult_expression         = expression_value, { multiplication_operator, expression_value } ;
 expression_value        = string | integer | identifier | expression | function ;
 value                   = string | integer | identifier | list_literal | expression ;
 comparison              = value, comparison_operator, value ;

@@ -1,21 +1,49 @@
+from collections.abc import Callable
+from typing import cast
+
 from exceptions import variable_exception
+from model.ast_nodes import ASTNode
+from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
+from model.ast_nodes.primatives import Identifier
 from model.context import StatementExecutionContext
-from model.value_types import Types
-from runtime.operator_handlers import resolve_expression
 
 
-def handle_global(
-    statement_execution_context: StatementExecutionContext,
+def handle_global(context: StatementExecutionContext):
+    global_vars = context.story.global_variables
+    target = context.statement.target.value
+    source = context.statement.source.value
+
+    if isinstance(source, Identifier):
+        if source.value not in global_vars:
+            raise variable_exception.VariableNotSetException(
+                context.exception_context, source.value
+            )
+
+        global_vars[target] = global_vars[source.value]
+
+
+def handle_scene_list(context: StatementExecutionContext):
+    # Nothing to do - already processed during semantic analysis
+    pass
+
+
+def handle_combat_list(context: StatementExecutionContext):
+    # Nothing to do - already processed during semantic analysis
+    pass
+
+
+keyword_table: dict[type[(ASTNode)], Callable[[StatementExecutionContext], None]] = {
+    GlobalDeclaration: handle_global,
+    SceneList: handle_scene_list,
+    CombatList: handle_combat_list,
+}
+
+
+def handle_entry_keyword(
+    context: StatementExecutionContext,
 ) -> None:
-    removed_keyword = statement_execution_context.line[1:]
-    if removed_keyword[0].type != Types.VARIABLE:
-        raise variable_exception.InvalidAssignmentTargetException(
-            statement_execution_context.exception_context
-        )
-    statement_execution_context.story.global_variables[removed_keyword[0].value] = (
-        resolve_expression(
-            removed_keyword[1:],
-            statement_execution_context.story.global_variables,
-            statement_execution_context.exception_context,
-        )
-    )
+
+    cast(StatementExecutionContext[EntryAction], context)
+    # remove the outer EntryStatement
+    context.statement = context.statement.statement
+    return keyword_table[type(context.statement)](context)

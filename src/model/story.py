@@ -1,25 +1,31 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from model.ast_nodes import ASTNode, StoryNode
+from model.ast_nodes.entry import EntryStatement
+from model.ast_nodes.primatives import Name
+from model.ast_nodes.scene import SceneStatement
 from model.story_token import Token
 
 
 @dataclass
 class SceneInfo:
-    line_indexes: dict[int, list[Token]]
-    end_line: int
+    line_indexes: Sequence[SceneStatement | EntryStatement]
     node_table: dict[str, int]
-    file_path: str
+    file_path: str | None
     variable_table: dict[str, Token] = field(default_factory=dict)
 
 
 class Story:
     def __init__(
         self,
-        scenes: list[str],
-        combats: list[str],
-        global_variables: dict[str, Token],
+        tree: StoryNode,
+        scenes: list[Name],
+        combats: list[Name],
+        global_variables: dict[str, ASTNode],
         scene_info: SceneInfo | None = None,
     ) -> None:
+        self.tree = tree
         self.scenes = scenes
         self.combats = combats
         self.global_variables = global_variables
