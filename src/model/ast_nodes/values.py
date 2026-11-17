@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from model.ast_nodes import ASTNode
+from model.ast_nodes.primatives import Null
 
 if TYPE_CHECKING:
     from model.ast_nodes.collections import ListLiteral
@@ -20,6 +21,7 @@ class ArithmeticOperator(StrEnum):
 class MultiplicationOperator(StrEnum):
     MULT = "*"
     DIV = "/"
+    MOD = "%"
 
 
 class ComparisonOperator(StrEnum):
@@ -35,7 +37,7 @@ class Function(ASTNode):
 
 @dataclass
 class Expression(ASTNode):
-    value: ExpressionValue | BinaryExpression | None
+    value: ExpressionValue | BinaryExpression | Null
 
 
 @dataclass

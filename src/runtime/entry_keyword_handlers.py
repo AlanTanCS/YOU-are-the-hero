@@ -4,22 +4,17 @@ from typing import cast
 from exceptions import variable_exception
 from model.ast_nodes import ASTNode
 from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
-from model.ast_nodes.primatives import Identifier
+from model.ast_nodes.primatives import Identifier, Integer, String
+from model.ast_nodes.values import Expression
 from model.context import StatementExecutionContext
+from runtime.resolve_values import resolve_value
 
 
 def handle_global(context: StatementExecutionContext):
     global_vars = context.story.global_variables
     target = context.statement.target.value
     source = context.statement.source.value
-
-    if isinstance(source, Identifier):
-        if source.value not in global_vars:
-            raise variable_exception.VariableNotSetException(
-                context.exception_context, source.value
-            )
-
-        global_vars[target] = global_vars[source.value]
+    global_vars[target] = resolve_value(source, global_vars, context.exception_context)
 
 
 def handle_scene_list(context: StatementExecutionContext):

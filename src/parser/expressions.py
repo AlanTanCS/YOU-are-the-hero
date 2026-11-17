@@ -1,4 +1,4 @@
-from exceptions import ExceptionContext
+from exceptions import ExceptionContext, syntax_exception
 from model.ast_nodes.values import (
     ArithmeticOperator,
     BinaryExpression,
@@ -9,8 +9,6 @@ from model.ast_nodes.values import (
 from model.story_token import Token
 from model.value_types import Types
 from parser.primatives import parse_primative
-
-Operand = BinaryExpression | ExpressionValue
 
 
 def parse_expression(
@@ -23,7 +21,7 @@ def parse_expression(
 
 def parse_additive_expr(
     tokens: list[Token], position: int, exception_context: ExceptionContext
-) -> tuple[Operand, int]:
+) -> tuple[BinaryExpression | ExpressionValue, int]:
     left, position = parse_mult_expr(tokens, position, exception_context)
 
     while position < len(tokens) and tokens[position].type in Types.ARITHMETIC_OPERATOR:
@@ -38,7 +36,7 @@ def parse_additive_expr(
 
 def parse_mult_expr(
     tokens: list[Token], position: int, exception_context: ExceptionContext
-) -> tuple[Operand, int]:
+) -> tuple[BinaryExpression | ExpressionValue, int]:
     left, position = parse_value(tokens, position, exception_context)
 
     while (
@@ -56,7 +54,7 @@ def parse_mult_expr(
 
 def parse_value(
     tokens: list[Token], position: int, exception_context: ExceptionContext
-) -> tuple[Operand, int]:  # was tuple[ExpressionValue, int]
+) -> tuple[BinaryExpression | ExpressionValue, int]:
     current_token = tokens[position]
 
     if current_token.type in (Types.STRING, Types.INTEGER, Types.VARIABLE):
@@ -72,4 +70,4 @@ def parse_value(
 
         return expression, position + 1
 
-    raise SyntaxError("Internal error: Unexpected token")
+    raise syntax_exception.InvalidExpressionException(exception_context)

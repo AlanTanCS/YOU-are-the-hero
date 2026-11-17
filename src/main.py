@@ -48,7 +48,8 @@ def main() -> None:
         ast_visitor.global_variable_table,
     )
     story_engine = StoryEngine(story)
-    story_engine.run_entry()
+    story_engine.run()
+    # story_engine.run_entry()
 
     # set_line_and_scene(story_engine, 0, 3)
     # print(story_engine.story.get_active_scene())

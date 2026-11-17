@@ -45,6 +45,12 @@ class ArithmeticOperators(StrEnum):
     SUB = "-"
 
 
+class MultiplicationOperators(StrEnum):
+    MULT = "*"
+    DIV = "/"
+    MOD = "%"
+
+
 DEFAULT_NAMESPACES: dict[Namespace, set[Namespace]] = {
     Namespace.SCENE: {Namespace.LIST, Namespace.ENTRY},
     Namespace.ENTRY: {Namespace.LIST, Namespace.SCENE},

@@ -21,3 +21,8 @@ class Integer(ASTNode):
 @dataclass
 class String(ASTNode):
     value: str
+
+
+@dataclass
+class Null(ASTNode):
+    value: None

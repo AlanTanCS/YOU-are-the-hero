@@ -99,7 +99,7 @@ class StoryEngine:
         self.handle_statement(self.story.scene_info.line_indexes[self.statement_number])
         return self.next_line()
 
-    def run_entry(self) -> int:
+    def run_entry(self) -> None:
         entry_file = self.story.tree.entry_file
         self.story.scene_info = SceneInfo(
             entry_file.entry_statements, {}, entry_file.file, {}
@@ -107,12 +107,12 @@ class StoryEngine:
 
         while True:
             if self.step() == -1:
-                return -1
+                return
 
-    def run_scene(self) -> int:
+    def run_scene(self) -> None:
         while True:
             if self.step() == -1:
-                return -1
+                return
 
     # def validate_story(self) -> None:
     #     self.story.cached_scenes = [
@@ -122,16 +122,17 @@ class StoryEngine:
     #         raise reference_exception.ScenesNotFoundException()
     #     self.story.scene_info = None
 
-    # def run(self) -> None:
-    #     self.validate_story()
-    #     # initial scene
-    #     initial_scene = self.story.get_scene(0)
-    #     if isinstance(initial_scene, SceneInfo):
-    #         self.set_scene(initial_scene)
-    #     else:
-    #         self.set_scene(self.get_file_scene_info(initial_scene))
+    def run(self) -> None:
+        self.run_entry()
+        # self.validate_story()
+        # # initial scene
+        # initial_scene = self.story.get_scene(0)
+        # if isinstance(initial_scene, SceneInfo):
+        #     self.set_scene(initial_scene)
+        # else:
+        #     self.set_scene(self.get_file_scene_info(initial_scene))
 
-    #     # execute scene and then move onto next
-    #     while True:
-    #         if self.run_scene() == -1:
-    #             break
+        # # execute scene and then move onto next
+        # while True:
+        #     if self.run_scene() == -1:
+        #         break

@@ -11,6 +11,7 @@ from model.syntax import (
     KEYWORD_ENUMS,
     ArithmeticOperators,
     ComparisonOperators,
+    MultiplicationOperators,
     Namespace,
 )
 from model.value_types import Types
@@ -79,6 +80,8 @@ def determine_type(exception_context: ExceptionContext, line: str) -> Types:
         return Types.LIST_END
     if line in ArithmeticOperators:
         return Types.ARITHMETIC_OPERATOR
+    if line in MultiplicationOperators:
+        return Types.MULTIPLICATION_OPERATOR
     if line in ComparisonOperators:
         return Types.COMPARISON_OPERATOR
     if is_keyword(line):
@@ -121,7 +124,8 @@ def tokenise(
     line: str, namespace: Namespace, exception_context: ExceptionContext
 ) -> list[Token]:
     elements = re.findall(
-        r'"[^"\n]*"|==|>|<|\(|\)|\[|\]|\+|-|\d+(?:\.\d+)?|[A-Za-z_]\w*(?:\.\w+)*', line
+        r'"[^"\n]*"|==|>|<|\(|\)|\[|\]|\+|-|/|\*|%|\d+(?:\.\d+)?|[A-Za-z_]\w*(?:\.\w+)*',
+        line,
     )
     out = []
     valid_paren = []
@@ -138,6 +142,8 @@ def tokenise(
             out.append(Token(type, element[1:-1]))
         elif type == Types.ARITHMETIC_OPERATOR:
             out.append(Token(type, ArithmeticOperators(element)))
+        elif type == Types.MULTIPLICATION_OPERATOR:
+            out.append(Token(type, MultiplicationOperators(element)))
         elif type == Types.COMPARISON_OPERATOR:
             out.append(Token(type, ComparisonOperators(element)))
         elif type == Types.KEYWORD:
