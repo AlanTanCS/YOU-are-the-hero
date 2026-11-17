@@ -1,11 +1,8 @@
 from collections.abc import Callable
 from typing import cast
 
-from exceptions import variable_exception
 from model.ast_nodes import ASTNode
 from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
-from model.ast_nodes.primatives import Identifier, Integer, String
-from model.ast_nodes.values import Expression
 from model.context import StatementExecutionContext
 from runtime.resolve_values import resolve_value
 
@@ -39,6 +36,6 @@ def handle_entry_keyword(
 ) -> None:
 
     cast(StatementExecutionContext[EntryAction], context)
-    # remove the outer EntryStatement
-    context.statement = context.statement.statement
+    # remove the outer EntryStatement and EntryAction
+    context.statement = context.statement.statement.action
     return keyword_table[type(context.statement)](context)

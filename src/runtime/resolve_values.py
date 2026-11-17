@@ -4,12 +4,11 @@ from exceptions import ExceptionContext, type_exception, variable_exception
 from model.ast_nodes import ASTNode
 from model.ast_nodes.primatives import Identifier, Integer, String
 from model.ast_nodes.values import (
-    ArithmeticOperator,
     BinaryExpression,
     Expression,
     ExpressionValue,
-    MultiplicationOperator,
 )
+from model.syntax import ArithmeticOperators, MultiplicationOperators
 
 
 def handle_add(
@@ -77,21 +76,21 @@ def handle_mod(
 
 
 operator_table: dict[
-    ArithmeticOperator | MultiplicationOperator,
+    ArithmeticOperators | MultiplicationOperators,
     Callable[[ASTNode, ASTNode, ExceptionContext], ASTNode],
 ] = {
-    ArithmeticOperator.ADD: handle_add,
-    ArithmeticOperator.SUB: handle_sub,
-    MultiplicationOperator.MULT: handle_mult,
-    MultiplicationOperator.DIV: handle_div,
-    MultiplicationOperator.MOD: handle_mod,
+    ArithmeticOperators.ADD: handle_add,
+    ArithmeticOperators.SUB: handle_sub,
+    MultiplicationOperators.MULT: handle_mult,
+    MultiplicationOperators.DIV: handle_div,
+    MultiplicationOperators.MOD: handle_mod,
 }
 
 
 def resolve_operation(
     left: ASTNode,
     right: ASTNode,
-    operator: MultiplicationOperator | ArithmeticOperator,
+    operator: MultiplicationOperators | ArithmeticOperators,
     symbol_table: dict,
     exception_context: ExceptionContext,
 ) -> ASTNode:

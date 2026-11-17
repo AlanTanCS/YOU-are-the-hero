@@ -23,7 +23,8 @@ class ASTNode:
 
             elif isinstance(value, list):
                 for item in value:
-                    item.set_file(file)
+                    if isinstance(item, ASTNode):
+                        item.set_file(file)
 
     def set_line_number(self, line_number: int | None):
         self.line_number = line_number

@@ -1,11 +1,11 @@
 // SCENE.SET test2 20
-GLOBAL test (10 + 10 + 10)
-GLOBAL test (14 * (13 % 2))
+// GLOBAL test2 [undefined]
+// GLOBAL test (14 * (13 % 2))
 // GLOBAL tobeset test
 // GLOBAL expressiontest2 (health)
 // GLOBAL expressiontest (100 + 200 + 300 + health)
 // GLOBAL currenthealth 200
 
-// SCENE_LIST [scene1, scene3]
+SCENE_LIST [scene1, scene3]
 
 // COMBAT_LIST [goblin, orc, troll]

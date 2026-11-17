@@ -1,14 +1,13 @@
 from collections.abc import Callable
+from typing import cast
 
-from exceptions import (
-    argument_exception,
-    syntax_exception,
-    type_exception,
-)
+from exceptions import argument_exception, syntax_exception, type_exception
 from model.ast_nodes import ASTNode
 from model.ast_nodes.collections import NameList
-from model.ast_nodes.entry import CombatList, GlobalDeclaration, SceneList
+from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
+from model.ast_nodes.listnodes import ListStatement
 from model.ast_nodes.primatives import Identifier, Name
+from model.ast_nodes.scene import SceneAction
 from model.ast_nodes.values import Value
 from model.context import StatementParseContext
 from model.syntax import EntryKeywords
@@ -37,10 +36,8 @@ def check_non_nested_list(list, exception_context):
     return list
 
 
-def parse_scene_list(statement_parse_context: StatementParseContext) -> SceneList:
-    scene_list = check_non_nested_list(
-        statement_parse_context.line[1:], statement_parse_context.exception_context
-    )
+def parse_scene_list(context: StatementParseContext) -> SceneList:
+    scene_list = check_non_nested_list(context.line[1:], context.exception_context)
 
     name_list = []
     for names in scene_list:
@@ -49,10 +46,8 @@ def parse_scene_list(statement_parse_context: StatementParseContext) -> SceneLis
     return SceneList(NameList(name_list))
 
 
-def parse_combat_list(statement_parse_context: StatementParseContext) -> CombatList:
-    combat_list = check_non_nested_list(
-        statement_parse_context.line[1:], statement_parse_context.exception_context
-    )
+def parse_combat_list(context: StatementParseContext) -> CombatList:
+    combat_list = check_non_nested_list(context.line[1:], context.exception_context)
 
     name_list = []
     for names in combat_list:
@@ -61,33 +56,29 @@ def parse_combat_list(statement_parse_context: StatementParseContext) -> CombatL
     return CombatList(NameList(name_list))
 
 
-def parse_global(statement_parse_context: StatementParseContext) -> GlobalDeclaration:
-    if statement_parse_context.line[1].type != Types.VARIABLE:
+def parse_global(context: StatementParseContext) -> GlobalDeclaration:
+    if context.line[1].type != Types.VARIABLE:
         raise type_exception.UnexpectedTypeException(
-            statement_parse_context.exception_context, [Types.VARIABLE]
+            context.exception_context, [Types.VARIABLE]
         )
-    target = statement_parse_context.line[2:]
+    target = context.line[2:]
     if target[0].type == Types.LIST_START:
         target.pop(0)
-        target, _ = parse_list_literal(
-            target, 0, statement_parse_context.exception_context
-        )
+        target, _ = parse_list_literal(target, 0, context.exception_context)
     elif target[0].type == Types.EXPRESSION_START:
-        target, _ = parse_expression(
-            target, 0, statement_parse_context.exception_context
-        )
+        target, _ = parse_expression(target, 0, context.exception_context)
     else:
-        if len(statement_parse_context.line) != 3:
+        if len(context.line) != 3:
             raise argument_exception.InvalidNumberOfArgumentsException(
-                statement_parse_context.exception_context,
+                context.exception_context,
                 2,
-                len(statement_parse_context.line) - 1,
+                len(context.line) - 1,
             )
         target = target[0]
         target = parse_primative(target)
 
     return GlobalDeclaration(
-        Identifier(statement_parse_context.line[1].value),
+        Identifier(context.line[1].value),
         Value(target),
     )
 
@@ -100,7 +91,12 @@ keyword_table: dict[EntryKeywords, Callable[[StatementParseContext], ASTNode]] =
 
 
 def parse_entry_statement(
-    statement_parse_context: StatementParseContext,
-) -> ASTNode:
-    enum_value = statement_parse_context.line[0].value
-    return keyword_table[enum_value](statement_parse_context)
+    context: StatementParseContext,
+) -> EntryAction:
+    enum_value = context.line[0].value
+    return EntryAction(
+        cast(
+            SceneList | CombatList | GlobalDeclaration | SceneAction | ListStatement,
+            keyword_table[enum_value](context),
+        )
+    )

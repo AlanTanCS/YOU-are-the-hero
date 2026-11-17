@@ -1,33 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from model.ast_nodes import ASTNode
 from model.ast_nodes.primatives import Null
+from model.syntax import (
+    ArithmeticOperators,
+    ComparisonOperators,
+    MultiplicationOperators,
+)
 
 if TYPE_CHECKING:
     from model.ast_nodes.collections import ListLiteral
     from model.ast_nodes.listnodes import ListGet, ListLength
     from model.ast_nodes.primatives import Identifier, Integer, String
-
-
-class ArithmeticOperator(StrEnum):
-    ADD = "+"
-    SUB = "-"
-
-
-class MultiplicationOperator(StrEnum):
-    MULT = "*"
-    DIV = "/"
-    MOD = "%"
-
-
-class ComparisonOperator(StrEnum):
-    EQUALS = "=="
-    GREATER = ">"
-    LESS = "<"
 
 
 @dataclass
@@ -43,7 +30,7 @@ class Expression(ASTNode):
 @dataclass
 class BinaryExpression(ASTNode):
     left: ExpressionValue | BinaryExpression
-    operator: ArithmeticOperator | MultiplicationOperator
+    operator: ArithmeticOperators | MultiplicationOperators
     right: ExpressionValue | BinaryExpression
 
 
@@ -59,6 +46,5 @@ class Value(ASTNode):
 
 @dataclass
 class Comparison(ASTNode):
-    left: Value
-    operator: ComparisonOperator
-    right: Value
+    operands: list[Value]
+    operators: list[ComparisonOperators]

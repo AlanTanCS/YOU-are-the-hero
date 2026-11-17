@@ -3,9 +3,10 @@ import sys
 
 from exceptions import StoryException
 from model.story import Story
-from parser import parse_entry_point
+from model.syntax import Namespace
+from parser import parse_entry
 from runtime.story_engine import StoryEngine
-from scanner import scan_entry_point
+from scanner import scan_story_file
 from semantic.entry_analyser import EntrySemanticAnalyser
 
 
@@ -36,8 +37,8 @@ def find_entry_file(file_path: str) -> str:
 def main() -> None:
     entry = handle_arguments()
     ENTRY_FILE = find_entry_file(entry)
-    entry_lines = scan_entry_point(ENTRY_FILE)
-    ast_tree = parse_entry_point(entry_lines, ENTRY_FILE)
+    entry_lines = scan_story_file(ENTRY_FILE, Namespace.ENTRY)
+    ast_tree = parse_entry(entry_lines, ENTRY_FILE)
     ast_visitor = EntrySemanticAnalyser()
     ast_visitor.analyse(ast_tree)
 

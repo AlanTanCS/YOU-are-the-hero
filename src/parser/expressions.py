@@ -1,12 +1,7 @@
 from exceptions import ExceptionContext, syntax_exception
-from model.ast_nodes.values import (
-    ArithmeticOperator,
-    BinaryExpression,
-    Expression,
-    ExpressionValue,
-    MultiplicationOperator,
-)
+from model.ast_nodes.values import BinaryExpression, Expression, ExpressionValue
 from model.story_token import Token
+from model.syntax import ArithmeticOperators, MultiplicationOperators
 from model.value_types import Types
 from parser.primatives import parse_primative
 
@@ -29,7 +24,7 @@ def parse_additive_expr(
         position += 1
 
         right, position = parse_mult_expr(tokens, position, exception_context)
-        left = BinaryExpression(left, ArithmeticOperator(operator.value), right)
+        left = BinaryExpression(left, ArithmeticOperators(operator.value), right)
 
     return left, position
 
@@ -47,7 +42,7 @@ def parse_mult_expr(
         position += 1
 
         right, position = parse_value(tokens, position, exception_context)
-        left = BinaryExpression(left, MultiplicationOperator(operator.value), right)
+        left = BinaryExpression(left, MultiplicationOperators(operator.value), right)
 
     return left, position
 

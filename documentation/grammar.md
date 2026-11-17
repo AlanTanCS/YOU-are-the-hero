@@ -34,7 +34,7 @@ additive_expression     = mult_expression, { arithmetic_operator, mult_expressio
 mult_expression         = expression_value, { multiplication_operator, expression_value } ;
 expression_value        = string | integer | identifier | expression | function ;
 value                   = string | integer | identifier | list_literal | expression ;
-comparison              = value, comparison_operator, value ;
+comparison              = value, comparison_operator, value, { comparison_operator, value } ;
 
 name_list               = "[", [ name, { ",", name } ], "]" ;
 list_literal            = "[", [ value, { ",", value } ], "]" ;

@@ -5,8 +5,10 @@ from model.ast_nodes import ASTNode
 from model.context import StatementExecutionContext
 from model.story import SceneInfo, Story
 from model.story_token import Token
+from model.syntax import Namespace
 from parser import parse_scene
 from runtime.handle_keyword import handle_keyword as handle
+from scanner import scan_story_file
 
 
 class StoryEngine:
@@ -14,20 +16,6 @@ class StoryEngine:
         self.statement_number = 0
         self.loc = 0
         self.story = story
-
-    # def get_file_scene_info(self, file_name: str) -> SceneInfo:
-    #     file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
-    #     if not os.path.isfile(file_path):
-    #         raise FileNotFoundError(file_path)
-
-    #     line_indexes, end_line, node_table = parse_scene(
-    #         file_path,
-    #         self.story.scenes,
-    #         self.story.combats,
-    #         self.story.global_variables,
-    #     )
-    #     scene_info = SceneInfo(line_indexes, end_line, node_table, file_path)
-    #     return scene_info
 
     def get_current_line_number(self) -> int:
         return self.loc
@@ -100,31 +88,25 @@ class StoryEngine:
         return self.next_line()
 
     def run_entry(self) -> None:
-        entry_file = self.story.tree.entry_file
-        self.story.scene_info = SceneInfo(
-            entry_file.entry_statements, {}, entry_file.file, {}
-        )
+        entry_file = self.story.ast_tree.entry_file
+        self.story.scene_info = SceneInfo(entry_file.entry_statements, {}, {})
+
+        # Nothing to do...
+        if len(entry_file.entry_statements) == 0:
+            return
 
         while True:
             if self.step() == -1:
                 return
 
-    def run_scene(self) -> None:
+    def run_scenes(self) -> None:
         while True:
             if self.step() == -1:
                 return
-
-    # def validate_story(self) -> None:
-    #     self.story.cached_scenes = [
-    #         self.get_file_scene_info(scene) for scene in self.story.scenes
-    #     ]
-    #     if self.story.cached_scenes == []:
-    #         raise reference_exception.ScenesNotFoundException()
-    #     self.story.scene_info = None
 
     def run(self) -> None:
         self.run_entry()
-        # self.validate_story()
+        self.validate_story()
         # # initial scene
         # initial_scene = self.story.get_scene(0)
         # if isinstance(initial_scene, SceneInfo):
@@ -136,3 +118,32 @@ class StoryEngine:
         # while True:
         #     if self.run_scene() == -1:
         #         break
+
+    def validate_story(self) -> None:
+        """Parses all scenes declared in entry and caches the AST, and symbol tables"""
+
+        self.story.cached_scenes = [
+            self.get_file_scene_info(scene) for scene in self.story.scenes
+        ]
+        # if self.story.cached_scenes == []:
+        #     raise reference_exception.ScenesNotFoundException()
+        # self.story.scene_info = None
+
+    def get_file_scene_info(self, file_name: str) -> SceneInfo:
+        file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
+
+        # Scan
+        scene_lines = scan_story_file(file_path, Namespace.SCENE)
+
+        # Parse
+        scene_file = parse_scene(scene_lines, file_path, self.story.ast_tree)
+        # Semantic analysis
+
+    #     line_indexes, end_line, node_table = parse_scene(
+    #         file_path,
+    #         self.story.scenes,
+    #         self.story.combats,
+    #         self.story.global_variables,
+    #     )
+    #     scene_info = SceneInfo(line_indexes, end_line, node_table, file_path)
+    #     return scene_info
