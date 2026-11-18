@@ -1,21 +1,21 @@
 from collections.abc import Callable
 
-from exceptions import argument_exception, syntax_exception, type_exception
+from exceptions import ExceptionContext, argument_exception, syntax_exception
 from model.ast_nodes.collections import NameList
 from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
 from model.ast_nodes.listnodes import ListStatement
 from model.ast_nodes.primatives import Identifier, Name
 from model.ast_nodes.scene import SceneAction
-from model.ast_nodes.values import Value
 from model.context import StatementParseContext
+from model.story_token import Token
 from model.syntax import EntryKeywords
 from model.value_types import Types
-from parser.collections import parse_list_literal
-from parser.expressions import parse_expression
-from parser.primatives import parse_primative
+from parser.parser_helper import parse_identifier, parse_value
 
 
-def check_non_nested_list(list, exception_context):
+def check_non_nested_list(
+    list: list[Token], exception_context: ExceptionContext
+) -> list[Token]:
     # scene_list and combat_list specifically disallow nested lists
     list_starts = sum(token.type == Types.LIST_START for token in list)
     list_ends = sum(token.type == Types.LIST_END for token in list)
@@ -55,30 +55,17 @@ def parse_combat_list(context: StatementParseContext) -> CombatList:
 
 
 def parse_global(context: StatementParseContext) -> GlobalDeclaration:
-    if context.line[1].type != Types.VARIABLE:
-        raise type_exception.UnexpectedTypeException(
-            context.exception_context, [Types.VARIABLE]
-        )
-    target = context.line[2:]
-    if target[0].type == Types.LIST_START:
-        target.pop(0)
-        target, _ = parse_list_literal(target, 0, context.exception_context)
-    elif target[0].type == Types.EXPRESSION_START:
-        target, _ = parse_expression(target, 0, context.exception_context)
-    else:
-        if len(context.line) != 3:
-            raise argument_exception.InvalidNumberOfArgumentsException(
-                context.exception_context,
-                2,
-                len(context.line) - 1,
-            )
-        target = target[0]
-        target = parse_primative(target)
+    position = 1
 
-    return GlobalDeclaration(
-        Identifier(context.line[1].value),
-        Value(target),
-    )
+    identifier, position = parse_identifier(context, position)
+    value, position = parse_value(context, position)
+
+    if len(context.line) != position:
+        raise argument_exception.InvalidNumberOfArgumentsException(
+            context.exception_context, 2, len(context.line) - 1
+        )
+
+    return GlobalDeclaration(identifier, value)
 
 
 keyword_table: dict[

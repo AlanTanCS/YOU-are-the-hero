@@ -1,10 +1,11 @@
 from collections.abc import Callable
+from tkinter import Variable
 from typing import NoReturn, cast
 
 from exceptions import argument_exception, syntax_exception, type_exception
 from model.ast_nodes.entry import EntryAction
 from model.ast_nodes.listnodes import ListStatement
-from model.ast_nodes.primatives import Identifier, Name
+from model.ast_nodes.primatives import Identifier, Integer, Name, String
 from model.ast_nodes.scene import (
     ConditionalStatement,
     GotoStatement,
@@ -15,101 +16,94 @@ from model.ast_nodes.scene import (
     SceneAction,
     SetStatement,
 )
-from model.ast_nodes.values import Comparison, Value
+from model.ast_nodes.values import Comparison, Expression
 from model.context import StatementParseContext
 from model.syntax import ComparisonOperators, SceneKeywords
 from model.value_types import Types
-from parser.collections import parse_list_literal
 from parser.expressions import parse_expression
+from parser.parser_helper import parse_identifier, parse_value
 from parser.primatives import parse_primative
 
 
 def parse_node(context: StatementParseContext) -> NodeDeclaration:
-    if len(context.line) != 2:
-        raise argument_exception.InvalidNumberOfArgumentsException(
-            context.exception_context, 1, len(context.line)
-        )
 
-    location = parse_primative(context.line[1])
-    if isinstance(location, Identifier):
-        return NodeDeclaration(Name(location))
+    position = 1
+    if context.line[position].type in (Types.STRING, Types.VARIABLE, Types.INTEGER):
+        location = parse_primative(context.line[1])
+        if isinstance(location, Identifier):
+            return NodeDeclaration(Name(location))
+
     raise type_exception.UnexpectedTypeException(
         context.exception_context, [Identifier.__name__]
     )
 
 
 def parse_print(context: StatementParseContext) -> PrintStatement:
-    target = context.line[1:]
-    if target[0].type == Types.LIST_START:
-        target.pop(0)
-        target, _ = parse_list_literal(target, 0, context.exception_context)
-    elif target[0].type == Types.EXPRESSION_START:
-        target, _ = parse_expression(target, 0, context.exception_context)
-    else:
-        if len(context.line) != 2:
-            raise argument_exception.InvalidNumberOfArgumentsException(
-                context.exception_context,
-                1,
-                len(context.line) - 1,
-            )
-        target = target[0]
-        target = parse_primative(target)
+    target, position = parse_value(context, 1)
 
-    return PrintStatement(Value(target))
+    if position != len(context.line):
+        raise argument_exception.InvalidNumberOfArgumentsException(
+            context.exception_context, 1, len(context.line) - 1
+        )
+
+    return PrintStatement(target)
 
 
 def parse_if_then(context: StatementParseContext) -> ConditionalStatement:
-
-    split_index = 0
-    for token in context.line:
-        if token.value == SceneKeywords.THEN:
-            break
-        split_index += 1
-    else:
-        raise syntax_exception.MissingKeywordException(
-            context.exception_context, SceneKeywords.THEN
-        )
-    action = context.line[split_index + 1 :]
-    comparison = context.line[1:split_index]
+    position = 1
     operands = []
     operators = []
-    token_pos = 0
-    # Parse condition
-    while token_pos < len(comparison):
-        if comparison[token_pos].type in Types.COMPARISON_OPERATOR:
-            operators.append(ComparisonOperators(comparison[token_pos].value))
+    action = []
+    then_found = False
+    while position < len(context.line):
+        if context.line[position].value == SceneKeywords.THEN:
+            then_found = True
+            position += 1
+            continue
+        if then_found:
+            action.append(context.line[position])
         else:
-            if comparison[token_pos].type == Types.EXPRESSION_START:
-                expr, token_pos = parse_expression(
-                    comparison, token_pos, context.exception_context
-                )
+            if context.line[position].type in Types.COMPARISON_OPERATOR:
+                operators.append(ComparisonOperators(context.line[position].value))
+            elif context.line[position].type == Types.EXPRESSION_START:
+                expr, position = parse_expression(context, position)
                 operands.append(expr)
                 continue
-            elif comparison[token_pos].type in (
+            elif context.line[position].type in (
                 Types.INTEGER,
                 Types.STRING,
                 Types.VARIABLE,
             ):
-                operands.append(parse_primative(comparison[token_pos]))
+                operands.append(parse_primative(context.line[position]))
             else:
                 raise type_exception.UnexpectedTypeException(
                     context.exception_context,
-                    [Types.INTEGER, Types.STRING, Types.VARIABLE, "<expr>"],
+                    [
+                        Integer.__name__,
+                        String.__name__,
+                        Variable.__name__,
+                        Expression.__name__,
+                    ],
                 )
-        token_pos += 1
+        position += 1
 
-    # Parse action
+    if not then_found:
+        raise syntax_exception.MissingKeywordException(
+            context.exception_context, SceneKeywords.THEN
+        )
+
     if action[0].type not in Types.KEYWORD:
         raise syntax_exception.UnknownKeywordException(
             context.exception_context, action[0].value
         )
+
     if action[0].namespace is None:
         raise RuntimeError(
             "Internal error: Cannot have a keyword without assigned namespace"
         )
-
     context.line = action
     action = context.dispatch[action[0].namespace](context)
+
     return ConditionalStatement(
         Comparison(operands, operators), cast(SceneAction, action)
     )
@@ -117,61 +111,49 @@ def parse_if_then(context: StatementParseContext) -> ConditionalStatement:
 
 def parse_goto(context: StatementParseContext) -> GotoStatement:
 
-    if len(context.line) != 3:
-        raise argument_exception.InvalidNumberOfArgumentsException(
-            context.exception_context, 2, len(context.line) - 1
-        )
+    position = 1
 
     if context.line[1].value not in GotoType:
         raise syntax_exception.UnknownKeywordException(
             context.exception_context, context.line[1].value
         )
-
-    if context.line[2].type != Types.VARIABLE:
-        raise type_exception.UnexpectedTypeException(
-            context.exception_context, [Types.VARIABLE]
-        )
-
     type = GotoType(context.line[1].value)
-    identifier = Identifier(context.line[2].value)
+    position += 1
+
+    identifier, position = parse_identifier(context, position)
+
+    if len(context.line) != position:
+        raise argument_exception.InvalidNumberOfArgumentsException(
+            context.exception_context, 2, len(context.line) - 1
+        )
 
     return GotoStatement(type, identifier)
 
 
 def parse_input(context: StatementParseContext) -> InputStatement:
-    if len(context.line) != 2:
+    position = 1
+    identifier, position = parse_identifier(context, position)
+
+    if len(context.line) != position:
         raise argument_exception.InvalidNumberOfArgumentsException(
             context.exception_context, 1, len(context.line) - 1
         )
 
-    return InputStatement(Identifier(context.line[1].value))
+    return InputStatement(identifier)
 
 
 def parse_set(context: StatementParseContext) -> SetStatement:
-    if context.line[1].type != Types.VARIABLE:
-        raise type_exception.UnexpectedTypeException(
-            context.exception_context, [Types.VARIABLE]
-        )
-    target = context.line[2:]
-    if target[0].type == Types.LIST_START:
-        target.pop(0)
-        target, _ = parse_list_literal(target, 0, context.exception_context)
-    elif target[0].type == Types.EXPRESSION_START:
-        target, _ = parse_expression(target, 0, context.exception_context)
-    else:
-        if len(context.line) != 3:
-            raise argument_exception.InvalidNumberOfArgumentsException(
-                context.exception_context,
-                2,
-                len(context.line) - 1,
-            )
-        target = target[0]
-        target = parse_primative(target)
+    position = 1
 
-    return SetStatement(
-        Identifier(context.line[1].value),
-        Value(target),
-    )
+    identifier, position = parse_identifier(context, position)
+    value, position = parse_value(context, position)
+
+    if len(context.line) != position:
+        raise argument_exception.InvalidNumberOfArgumentsException(
+            context.exception_context, 2, len(context.line) - 1
+        )
+
+    return SetStatement(identifier, value)
 
 
 def parse_then(context: StatementParseContext) -> NoReturn:

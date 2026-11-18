@@ -51,13 +51,6 @@ class MultiplicationOperators(StrEnum):
     MOD = "%"
 
 
-DEFAULT_NAMESPACES: dict[Namespace, set[Namespace]] = {
-    Namespace.SCENE: {Namespace.LIST, Namespace.ENTRY},
-    Namespace.ENTRY: {Namespace.LIST, Namespace.SCENE},
-    Namespace.GOTO: set(),
-    Namespace.LIST: set(),
-}
-
 KEYWORD_ENUMS = (
     SceneKeywords,
     EntryKeywords,
