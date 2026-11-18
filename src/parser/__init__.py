@@ -10,9 +10,9 @@ from model.context import StatementParseContext
 from model.story_token import Token
 from model.syntax import Namespace
 from model.value_types import Types
-
-from .entry import parse_entry_statement
-from .scene import parse_scene_statement
+from parser.entry import parse_entry_statement
+from parser.lists import parse_list_statement
+from parser.scene import parse_scene_statement
 
 namespace_table: dict[
     Namespace,
@@ -23,7 +23,7 @@ namespace_table: dict[
 ] = {
     Namespace.ENTRY: parse_entry_statement,
     Namespace.SCENE: parse_scene_statement,
-    # Namespace.LIST: parse_list_statement,
+    Namespace.LIST: parse_list_statement,
 }
 
 

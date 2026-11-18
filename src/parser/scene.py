@@ -1,14 +1,7 @@
 from collections.abc import Callable
 from typing import NoReturn, cast
 
-from exceptions import (
-    ExceptionContext,
-    argument_exception,
-    declaration_exception,
-    syntax_exception,
-    type_exception,
-)
-from model.ast_nodes import ASTNode
+from exceptions import argument_exception, syntax_exception, type_exception
 from model.ast_nodes.entry import EntryAction
 from model.ast_nodes.listnodes import ListStatement
 from model.ast_nodes.primatives import Identifier, Name
@@ -187,7 +180,20 @@ def parse_then(context: StatementParseContext) -> NoReturn:
     )
 
 
-keyword_table: dict[SceneKeywords, Callable[[StatementParseContext], ASTNode]] = {
+keyword_table: dict[
+    SceneKeywords,
+    Callable[
+        [StatementParseContext],
+        PrintStatement
+        | InputStatement
+        | SetStatement
+        | ConditionalStatement
+        | GotoStatement
+        | EntryAction
+        | ListStatement
+        | NodeDeclaration,
+    ],
+] = {
     SceneKeywords.NODE: parse_node,
     SceneKeywords.PRINT: parse_print,
     SceneKeywords.IF: parse_if_then,
@@ -203,18 +209,6 @@ def parse_scene_statement(
 ) -> SceneAction | NodeDeclaration:
     enum_value = context.line[0].value
     return_value = keyword_table[enum_value](context)
-    print(return_value)
     if isinstance(return_value, NodeDeclaration):
         return return_value
-    return SceneAction(
-        cast(
-            PrintStatement
-            | InputStatement
-            | SetStatement
-            | ConditionalStatement
-            | GotoStatement
-            | EntryAction
-            | ListStatement,
-            return_value,
-        )
-    )
+    return SceneAction(return_value)

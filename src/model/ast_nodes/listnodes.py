@@ -18,7 +18,7 @@ class ListStatement(ASTNode):
 
 @dataclass
 class ListIndex(ASTNode):
-    index: Integer | Expression
+    index: Integer | Expression | Identifier
 
 
 @dataclass

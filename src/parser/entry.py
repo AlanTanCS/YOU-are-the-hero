@@ -1,8 +1,6 @@
 from collections.abc import Callable
-from typing import cast
 
 from exceptions import argument_exception, syntax_exception, type_exception
-from model.ast_nodes import ASTNode
 from model.ast_nodes.collections import NameList
 from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
 from model.ast_nodes.listnodes import ListStatement
@@ -83,7 +81,13 @@ def parse_global(context: StatementParseContext) -> GlobalDeclaration:
     )
 
 
-keyword_table: dict[EntryKeywords, Callable[[StatementParseContext], ASTNode]] = {
+keyword_table: dict[
+    EntryKeywords,
+    Callable[
+        [StatementParseContext],
+        SceneList | CombatList | GlobalDeclaration | SceneAction | ListStatement,
+    ],
+] = {
     EntryKeywords.GLOBAL: parse_global,
     EntryKeywords.SCENE_LIST: parse_scene_list,
     EntryKeywords.COMBAT_LIST: parse_combat_list,
@@ -94,9 +98,4 @@ def parse_entry_statement(
     context: StatementParseContext,
 ) -> EntryAction:
     enum_value = context.line[0].value
-    return EntryAction(
-        cast(
-            SceneList | CombatList | GlobalDeclaration | SceneAction | ListStatement,
-            keyword_table[enum_value](context),
-        )
-    )
+    return EntryAction(keyword_table[enum_value](context))

@@ -36,12 +36,3 @@ class StatementParseContext:
             EntryAction | ListStatement | SceneAction | NodeDeclaration,
         ],
     ]
-
-
-# @dataclass
-# class SceneStatementParseContext(StatementParseContext):
-#     scenes: list[str]
-#     combats: list[str]
-#     node_table: dict[str, int]
-#     global_variables: dict[str, Token]
-#     dispatch: Callable[["StatementParseContext"], list[Token]] | None = None

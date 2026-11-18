@@ -21,12 +21,12 @@ conditional_statement   = "IF", comparison, "THEN", scene_action ;
 goto_statement          = "GOTO", ("NODE" | "SCENE" | "COMBAT"), name ;
 
 list_statement          = list_get | list_set | list_insert | list_remove | list_length ;
-list_index              = integer | expression ;
-list_get                = "GET", ( Identifier | ListLiteral ), list_index ;
-list_set                = "SET", ( Identifier | ListLiteral ), list_index, value ;
-list_insert             = "INSERT", ( Identifier | ListLiteral ), list_index, value ;
-list_remove             = "REMOVE", ( Identifier | ListLiteral ), list_index ;
-list_length             = "LENGTH", ( Identifier | ListLiteral ) ;
+list_index              = integer | identifier | expression ;
+list_get                = "GET", ( identifier | list_literal ), list_index ;
+list_set                = "SET", ( identifier | list_literal ), list_index, value ;
+list_insert             = "INSERT", ( identifier | list_literal ), list_index, value ;
+list_remove             = "REMOVE", ( identifier | list_literal ), list_index ;
+list_length             = "LENGTH", ( identifier | list_literal ) ;
 
 function                = list_get | list_length ;
 expression              = "(", [ additive_expression ], ")" ;
