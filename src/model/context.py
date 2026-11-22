@@ -10,10 +10,9 @@ from model.ast_nodes.entry import EntryAction
 from model.ast_nodes.listnodes import ListStatement
 from model.ast_nodes.scene import NodeDeclaration, SceneAction
 from model.story import Story
+from model.story_token import Token
 from model.syntax import Namespace
 from semantic.dispatcher import SemanticDispatcher
-
-from .story_token import Token
 
 T = TypeVar("T", bound=ASTNode)
 

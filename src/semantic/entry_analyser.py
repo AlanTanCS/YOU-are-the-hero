@@ -25,7 +25,6 @@ class EntrySemanticAnalyser(ASTVisitor):
     def visit_globaldeclaration(self, node: GlobalDeclaration) -> None:
         # TODO
         pass
-        # self.global_variable_table[node.target.value] = node.source.value
 
     def visit_sceneaction(self, node: SceneAction) -> None:
         assert self.context.dispatcher, (

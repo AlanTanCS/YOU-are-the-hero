@@ -7,8 +7,10 @@ from semantic import ASTVisitor
 
 
 class DeclarationAnalyzer(ASTVisitor):
-    def __init__(self, global_variable_table={}) -> None:
-        self.global_variable_table: dict[str, list[int]] = global_variable_table
+    def __init__(self, global_variable_table=None) -> None:
+        self.global_variable_table: dict[str, list[int]] = (
+            global_variable_table if global_variable_table is not None else {}
+        )
         self.node_table: dict[str, int] = {}
         self.variable_table: dict[str, list[int]] = {}
 

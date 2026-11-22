@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from model.ast_nodes.scene import SceneAction
-
 if TYPE_CHECKING:
     from model.context import StatementSemanticContext
 
-from model.ast_nodes import ASTNode, SceneFile
+from model.ast_nodes import ASTNode
 from semantic import ASTVisitor
 
 

@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from typing import cast
 
 from model.ast_nodes import ASTNode
 from model.ast_nodes.collections import ListLiteral

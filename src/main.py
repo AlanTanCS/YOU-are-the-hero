@@ -42,9 +42,11 @@ def main() -> None:
     entry_lines = scan_story_file(ENTRY_FILE, Namespace.ENTRY)
     ast_tree = parse_entry(entry_lines, ENTRY_FILE)
 
+    # Analyse entry file declarations
     decl_visitor = DeclarationAnalyzer()
     decl_visitor.analyse(ast_tree.entry_file)
 
+    # Analyse entry file statements
     visitor = SemanticDispatcher(StatementSemanticContext())
     visitor.analyse_entry(ast_tree.entry_file)
 
@@ -54,6 +56,8 @@ def main() -> None:
         visitor.entry_analyser.context.combat_list,
         visitor.entry_analyser.context.global_variable_table,
     )
+
+    # Create and run story
     story_engine = StoryEngine(story)
     story_engine.run()
 

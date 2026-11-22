@@ -1,9 +1,5 @@
 from exceptions import syntax_exception
-from model.ast_nodes.values import (
-    BinaryExpression,
-    Expression,
-    ExpressionValue,
-)
+from model.ast_nodes.values import BinaryExpression, Expression, ExpressionValue
 from model.context import StatementParseContext
 from model.syntax import ArithmeticOperators, MultiplicationOperators
 from model.value_types import Types
