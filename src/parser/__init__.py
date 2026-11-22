@@ -40,10 +40,9 @@ def parse_entry(entry_lines: dict[int, list[Token]], entry_path: str) -> StoryNo
                 exception_context, line[0].value
             )
 
-        if line[0].namespace is None:
-            raise RuntimeError(
-                "Internal error: Cannot have a keyword without assigned namespace"
-            )
+        assert line[0].namespace, (
+            "Internal error: Cannot have a keyword without assigned namespace"
+        )
 
         parse_context = StatementParseContext(exception_context, line, namespace_table)
         statement = EntryStatement(
@@ -84,7 +83,7 @@ def parse_scene(
             )
         )
         statement.set_line_number(line_number)
-        scene_file.scene_statement.append(statement)
+        scene_file.scene_statements.append(statement)
 
     scene_file.set_file(scene_path)
 

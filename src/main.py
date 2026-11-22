@@ -2,12 +2,14 @@ import os
 import sys
 
 from exceptions import StoryException
+from model.context import StatementSemanticContext
 from model.story import Story
 from model.syntax import Namespace
 from parser import parse_entry
 from runtime.story_engine import StoryEngine
 from scanner import scan_story_file
-from semantic.entry_analyser import EntrySemanticAnalyser
+from semantic.declaration_analyser import DeclarationAnalyzer
+from semantic.dispatcher import SemanticDispatcher
 
 
 def handle_arguments() -> str:
@@ -39,14 +41,18 @@ def main() -> None:
     ENTRY_FILE = find_entry_file(entry)
     entry_lines = scan_story_file(ENTRY_FILE, Namespace.ENTRY)
     ast_tree = parse_entry(entry_lines, ENTRY_FILE)
-    ast_visitor = EntrySemanticAnalyser()
-    ast_visitor.analyse(ast_tree)
+
+    decl_visitor = DeclarationAnalyzer()
+    decl_visitor.analyse(ast_tree.entry_file)
+
+    visitor = SemanticDispatcher(StatementSemanticContext())
+    visitor.analyse_entry(ast_tree.entry_file)
 
     story = Story(
         ast_tree,
-        ast_visitor.scene_list,
-        ast_visitor.combat_list,
-        ast_visitor.global_variable_table,
+        visitor.entry_analyser.context.scene_list,
+        visitor.entry_analyser.context.combat_list,
+        visitor.entry_analyser.context.global_variable_table,
     )
     story_engine = StoryEngine(story)
     story_engine.run()

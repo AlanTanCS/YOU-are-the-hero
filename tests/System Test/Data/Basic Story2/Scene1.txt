@@ -1,3 +1,4 @@
+SET test ("This is a " + "expression")
 NODE HI
 GOTO SCENE end
 LIST.GET [2, 3, 4, 5] (1 + 2)

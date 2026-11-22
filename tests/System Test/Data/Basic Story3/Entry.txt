@@ -1,6 +1,7 @@
 // SCENE.SET test2 20
-// GLOBAL test2 [undefined]
-// GLOBAL test (14 * (13 % 2))
+GLOBAL test2 [undefined]
+//  GLOBAL test2 [undefined]
+// GLOBAL test (14 * (13 % "test"))
 // GLOBAL tobeset test
 // GLOBAL expressiontest2 (health)
 // GLOBAL expressiontest (100 + 200 + 300 + health)

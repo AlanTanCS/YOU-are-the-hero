@@ -46,7 +46,7 @@ class EntryFile(ASTNode):
 
 @dataclass
 class SceneFile(ASTNode):
-    scene_statement: list[SceneStatement]
+    scene_statements: list[SceneStatement]
 
 
 @dataclass

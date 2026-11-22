@@ -35,8 +35,7 @@ class Story:
         return self.cached_scenes[self.scenes.index(scene)]
 
     def get_active_scene(self) -> SceneInfo:
-        if self.scene_info is None:
-            raise RuntimeError("Internal error, no active scene set right now.")
+        assert self.scene_info, "Internal error, no active scene set right now."
         return self.scene_info
 
     def get_line(self, line_number: int) -> list[Token]:

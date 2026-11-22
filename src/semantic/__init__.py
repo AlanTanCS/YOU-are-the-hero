@@ -1,18 +1,18 @@
-from dataclasses import fields
+from dataclasses import fields, is_dataclass
 
 from model.ast_nodes import ASTNode
 
 
 class ASTVisitor:
     def visit_node(self, node: ASTNode):
-        method_name = f"visit_{type(node).__name__.lower()}"
-        # print(method_name)
-        method = getattr(self, method_name, self.traverse(node))
+        method = getattr(self, f"visit_{type(node).__name__.lower()}", self.traverse)
         # return method
         if method is not None:
             return method(node)
 
-    def traverse(self, node):
+    def traverse(self, node: ASTNode):
+        if not is_dataclass(node):
+            return
         for field in fields(node):
             value = getattr(node, field.name)
 

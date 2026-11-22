@@ -12,7 +12,7 @@ def scan_story_file(path: str, namespace: Namespace) -> dict[int, list[Token]]:
     with open(path) as story_data:
         for i, line in enumerate(story_data):
             exception_context.line_number = i + 1
-            if line.strip() == "" or line[:2].strip() == "//":
+            if line.strip() == "" or line.strip()[:2] == "//":
                 continue
             line_indexes[i + 1] = []
             split = split_statement(line)

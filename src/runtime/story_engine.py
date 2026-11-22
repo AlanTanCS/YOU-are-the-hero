@@ -1,7 +1,7 @@
 import os
 
 from exceptions import ExceptionContext, reference_exception
-from model.ast_nodes import ASTNode
+from model.ast_nodes import ASTNode, SceneFile
 from model.context import StatementExecutionContext
 from model.story import SceneInfo, Story
 from model.story_token import Token
@@ -9,6 +9,8 @@ from model.syntax import Namespace
 from parser import parse_scene
 from runtime.handle_keyword import handle_keyword as handle
 from scanner import scan_story_file
+from semantic.declaration_analyser import DeclarationAnalyzer
+from semantic.scene_analyser import SceneSemanticAnalyser
 
 
 class StoryEngine:
@@ -122,14 +124,21 @@ class StoryEngine:
     def validate_story(self) -> None:
         """Parses all scenes declared in entry and caches the AST, and symbol tables"""
 
-        self.story.cached_scenes = [
-            self.get_file_scene_info(scene) for scene in self.story.scenes
-        ]
-        # if self.story.cached_scenes == []:
-        #     raise reference_exception.ScenesNotFoundException()
-        # self.story.scene_info = None
+        # Scan and parse
+        for scene in self.story.scenes:
+            self.parse_scene(scene)
 
-    def get_file_scene_info(self, file_name: str) -> SceneInfo:
+        # Semantic analysis
+        decl_visitor = DeclarationAnalyzer()
+        for scene in self.story.ast_tree.scene_files:
+            decl_visitor.analyse(scene)
+
+        # scene_visitor = SceneSemanticAnalyser(
+        #     decl_visitor.global_variable_table, [], [], {}
+        # )
+        # scene_visitor.analyse(self.story.ast_tree.scene_files)
+
+    def parse_scene(self, file_name: str) -> SceneFile:
         file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
 
         # Scan
@@ -137,13 +146,5 @@ class StoryEngine:
 
         # Parse
         scene_file = parse_scene(scene_lines, file_path, self.story.ast_tree)
-        # Semantic analysis
 
-    #     line_indexes, end_line, node_table = parse_scene(
-    #         file_path,
-    #         self.story.scenes,
-    #         self.story.combats,
-    #         self.story.global_variables,
-    #     )
-    #     scene_info = SceneInfo(line_indexes, end_line, node_table, file_path)
-    #     return scene_info
+        return scene_file
