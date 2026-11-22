@@ -1,97 +1,65 @@
 import os
+from pathlib import Path
 
-from exceptions import ExceptionContext, reference_exception
+from exceptions import ExceptionContext
 from model.ast_nodes import ASTNode, SceneFile
-from model.context import StatementExecutionContext
+from model.context import StatementExecutionContext, StatementSemanticContext
 from model.story import SceneInfo, Story
-from model.story_token import Token
 from model.syntax import Namespace
 from parser import parse_scene
 from runtime.handle_keyword import handle_keyword as handle
 from scanner import scan_story_file
 from semantic.declaration_analyser import DeclarationAnalyzer
-from semantic.scene_analyser import SceneSemanticAnalyser
+from semantic.dispatcher import SemanticDispatcher
 
 
 class StoryEngine:
     def __init__(self, story: Story) -> None:
         self.statement_number = 0
-        self.loc = 0
         self.story = story
 
-    def get_current_line_number(self) -> int:
-        return self.loc
+    def set_scene(self, scene_info: SceneInfo) -> None:
+        self.story.scene_info = scene_info
+        self.statement_number = 0
 
-    def set_current_line_number(self, new_value: int) -> None:
-        self.loc = new_value - 1
+    def set_line(self, new_line):
+        self.statement_number = new_line
 
-    def get_current_line(self) -> list[Token]:
-        return self.story.get_line(self.loc)
-
-    def get_current_keyword(self) -> Token | None:
-        current_line = self.get_current_line()
-        if current_line:
-            return current_line[0]
-        else:
-            return None
-
-    # def set_new_loc(self, new_loc: int | str) -> None:
-    #     if isinstance(new_loc, int):
-    #         self.set_current_line_number(new_loc)
-    #     else:
-    #         self.set_scene(self.story.get_scene(new_loc))
-
-    # def set_scene(self, scene_info: SceneInfo) -> None:
-    #     self.loc = 0
-    #     self.story.scene_info = scene_info
-
-    # def handle_keyword(self, keyword: Token | None, line: list[Token]) -> None:
-    #     # keyword will be None if we're looking at a line thats empty
-    #     if keyword is None:
-    #         return
-
-    #     exception_context = ExceptionContext(
-    #         self.story.get_active_scene().file_path, self.get_current_line_number()
-    #     )
-    #     new_loc = handle(
-    #         StatementExecutionContext(
-    #             exception_context,
-    #             keyword,
-    #             line,
-    #             self.story,
-    #             self.story.get_active_scene().variable_table,
-    #             handle,
-    #         )
-    #     )
-    #     if isinstance(new_loc, (int, str)):
-    #         self.set_new_loc(new_loc)
-
-    def handle_statement(self, statement: ASTNode) -> None:
+    def handle_statement(self, statement: ASTNode) -> int | str | None:
         if statement.file is None:
             raise RuntimeError("Internal error: Statement has no associated file")
         exception_context = ExceptionContext(statement.file, statement.line_number)
         execution_context = StatementExecutionContext(
             exception_context, self.story, statement, handle
         )
-        handle(execution_context)
+        return handle(execution_context)
 
     def next_line(self) -> None | int:
         if self.story.scene_info is None:
             raise RuntimeError("Internal error: No active scene set")
         self.statement_number += 1
-        if self.statement_number >= len(self.story.scene_info.line_indexes):
+        if self.statement_number >= len(self.story.scene_info.statements):
             return -1
 
     def step(self) -> None | int:
         if self.story.scene_info is None:
             raise RuntimeError("Internal error: No active scene set")
-
-        self.handle_statement(self.story.scene_info.line_indexes[self.statement_number])
-        return self.next_line()
+        result = self.handle_statement(
+            self.story.scene_info.statements[self.statement_number]
+        )
+        if isinstance(result, int):
+            self.set_line(result)
+        elif isinstance(result, str):
+            self.set_scene(self.story.get_scene(result))
+        else:
+            return self.next_line()
 
     def run_entry(self) -> None:
         entry_file = self.story.ast_tree.entry_file
-        self.story.scene_info = SceneInfo(entry_file.entry_statements, {}, {})
+        assert entry_file.file, "Internal Error: File not set"
+        self.story.scene_info = SceneInfo(
+            Path(entry_file.file).stem, entry_file.entry_statements, {}, {}
+        )
 
         # Nothing to do...
         if len(entry_file.entry_statements) == 0:
@@ -99,22 +67,29 @@ class StoryEngine:
 
         while True:
             if self.step() == -1:
+                self.statement_number = 0
                 return
 
-    def run_scenes(self) -> None:
+    def run_scene(self) -> None:
+        assert self.story.scene_info, "Internal Error: Scene info not set"
+
+        # Nothing to do...
+        if len(self.story.scene_info.statements) == 0:
+            return
+
         while True:
             if self.step() == -1:
+                self.statement_number = 0
                 return
 
     def run(self) -> None:
         self.run_entry()
         self.validate_story()
-        # # initial scene
-        # initial_scene = self.story.get_scene(0)
-        # if isinstance(initial_scene, SceneInfo):
-        #     self.set_scene(initial_scene)
-        # else:
-        #     self.set_scene(self.get_file_scene_info(initial_scene))
+
+        # initial scene
+        initial_scene = self.story.get_scene(0)
+        self.set_scene(initial_scene)
+        self.run_scene()
 
         # # execute scene and then move onto next
         # while True:
@@ -129,22 +104,30 @@ class StoryEngine:
             self.parse_scene(scene)
 
         # Semantic analysis
-        decl_visitor = DeclarationAnalyzer()
         for scene in self.story.ast_tree.scene_files:
+            decl_visitor = DeclarationAnalyzer(
+                global_variable_table=self.story.global_variables
+            )
             decl_visitor.analyse(scene)
 
-        # scene_visitor = SceneSemanticAnalyser(
-        #     decl_visitor.global_variable_table, [], [], {}
-        # )
-        # scene_visitor.analyse(self.story.ast_tree.scene_files)
+        for scene in self.story.ast_tree.scene_files:
+            assert scene.file, "Internal Error: File not set"
+            scene_visitor = SemanticDispatcher(StatementSemanticContext())
+            scene_visitor.analyse_scene(scene)
+            self.story.cached_scenes.append(
+                SceneInfo(
+                    Path(scene.file).stem,
+                    scene.scene_statements,
+                    scene_visitor.state.node_table,
+                    scene_visitor.state.variable_table,
+                )
+            )
 
-    def parse_scene(self, file_name: str) -> SceneFile:
+    def parse_scene(self, file_name: str) -> None:
         file_path = os.path.join(os.getcwd(), f"{file_name}.txt")
 
         # Scan
         scene_lines = scan_story_file(file_path, Namespace.SCENE)
 
         # Parse
-        scene_file = parse_scene(scene_lines, file_path, self.story.ast_tree)
-
-        return scene_file
+        parse_scene(scene_lines, file_path, self.story.ast_tree)

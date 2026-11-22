@@ -9,8 +9,8 @@ from model.ast_nodes.scene import SceneAction
 if TYPE_CHECKING:
     from model.context import StatementSemanticContext
 from exceptions import ExceptionContext, declaration_exception
-from model.ast_nodes import EntryFile
-from model.ast_nodes.entry import CombatList, EntryAction, GlobalDeclaration, SceneList
+from model.ast_nodes import ASTNode
+from model.ast_nodes.entry import CombatList, GlobalDeclaration, SceneList
 from model.syntax import EntryKeywords
 from semantic import ASTVisitor
 
@@ -19,15 +19,11 @@ class EntrySemanticAnalyser(ASTVisitor):
     def __init__(self, context: StatementSemanticContext) -> None:
         self.context: StatementSemanticContext = context
 
-    def analyse(self, node: EntryFile) -> None:
+    def analyse(self, node: ASTNode) -> None:
         self.visit_node(node)
-
-    def analyse_action(self, action: EntryAction) -> None:
-        self.visit_node(action)
 
     def visit_globaldeclaration(self, node: GlobalDeclaration) -> None:
         # TODO
-        # print("asoidjaoisjdoiasdji")
         pass
         # self.global_variable_table[node.target.value] = node.source.value
 

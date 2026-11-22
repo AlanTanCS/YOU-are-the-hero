@@ -7,7 +7,8 @@ from model.story_token import Token
 
 @dataclass
 class SceneInfo:
-    line_indexes: Sequence[ASTNode]
+    scene_name: str
+    statements: Sequence[ASTNode]
     node_table: dict[str, int]
     variable_table: dict[str, ASTNode] = field(default_factory=dict)
 
@@ -31,12 +32,4 @@ class Story:
     def get_scene(self, scene: int | str) -> SceneInfo:
         if isinstance(scene, int):
             return self.cached_scenes[scene]
-        print(self.scenes.index(scene))
         return self.cached_scenes[self.scenes.index(scene)]
-
-    def get_active_scene(self) -> SceneInfo:
-        assert self.scene_info, "Internal error, no active scene set right now."
-        return self.scene_info
-
-    def get_line(self, line_number: int) -> list[Token]:
-        return self.get_active_scene().line_indexes.get(line_number, [])

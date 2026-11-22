@@ -43,13 +43,13 @@ class PrintStatement(ASTNode):
 
 @dataclass
 class InputStatement(ASTNode):
-    identifier: Identifier
+    target: Identifier
 
 
 @dataclass
 class SetStatement(ASTNode):
-    identifier: Identifier
-    value: Value
+    target: Identifier
+    source: Value
 
 
 @dataclass
@@ -67,4 +67,4 @@ class GotoType(StrEnum):
 @dataclass
 class GotoStatement(ASTNode):
     type: GotoType
-    identifier: Identifier
+    target: Identifier

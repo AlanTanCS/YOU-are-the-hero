@@ -7,8 +7,8 @@ from semantic import ASTVisitor
 
 
 class DeclarationAnalyzer(ASTVisitor):
-    def __init__(self) -> None:
-        self.global_variable_table: dict[str, list[int]] = {}
+    def __init__(self, global_variable_table={}) -> None:
+        self.global_variable_table: dict[str, list[int]] = global_variable_table
         self.node_table: dict[str, int] = {}
         self.variable_table: dict[str, list[int]] = {}
 
@@ -41,12 +41,8 @@ class DeclarationAnalyzer(ASTVisitor):
 
     def visit_inputstatement(self, node: InputStatement):
         assert node.line_number
-        self.variable_table.setdefault(node.identifier.value, []).append(
-            node.line_number
-        )
+        self.variable_table.setdefault(node.target.value, []).append(node.line_number)
 
     def visit_setstatement(self, node: SetStatement):
         assert node.line_number
-        self.variable_table.setdefault(node.identifier.value, []).append(
-            node.line_number
-        )
+        self.variable_table.setdefault(node.target.value, []).append(node.line_number)

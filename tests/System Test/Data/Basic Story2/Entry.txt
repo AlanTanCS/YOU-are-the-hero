@@ -1,3 +1,2 @@
-//GLOBAL testingVar 100
-SCENE.SET testing 200
-SCENE_LIST [scene1]
+GLOBAL testingVar 100
+SCENE_LIST [scene1, Scene2]

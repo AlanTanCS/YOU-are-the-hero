@@ -4,8 +4,7 @@ from model.ast_nodes.scene import SceneStatement
 from model.context import StatementExecutionContext
 from runtime.entry_keyword_handlers import handle_entry_keyword
 from runtime.list_keyword_handlers import handle_keyword as handle_list_keyword
-
-from .scene_keyword_handlers import handle_keyword as handle_scene_keyword
+from runtime.scene_keyword_handlers import handle_scene_keyword
 
 keyword_handlers = {
     SceneStatement: handle_scene_keyword,

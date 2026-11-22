@@ -45,4 +45,6 @@ class StatementSemanticContext:
     scene_list: list[str] = field(default_factory=list)
     combat_list: list[str] = field(default_factory=list)
     global_variable_table: dict[str, ASTNode] = field(default_factory=dict)
+    node_table: dict[str, int] = field(default_factory=dict)
+    variable_table: dict[str, ASTNode] = field(default_factory=dict)
     dispatcher: SemanticDispatcher | None = None

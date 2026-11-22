@@ -1,4 +1,6 @@
+//NODE testing2
 PRINT "HI NUMBER2"
-PRINT testingVar
-PRINT testingIfthisWORKs
-SET listtest [1, 2, 3]
+//ENTRY.GLOBAL heh3 3
+//PRINT testingVar
+//PRINT testingIfthisWORKs
+//SET listtest [1, 2, 3]

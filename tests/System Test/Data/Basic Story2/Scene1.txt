@@ -1,21 +1,30 @@
-SET test ("This is a " + "expression")
-NODE HI
-GOTO SCENE end
-LIST.GET [2, 3, 4, 5] (1 + 2)
-SET test (123123123)
-INPUT test
-NODE end
-IF 1 == (1) > (2 + 3) THEN SET test 2
-PRINT 1
-SET testList [1, 20,3 ]
-// PRINT (LIST.GET testList (1 + 0))
-LIST.SET testList 2 3
-PRINT testList
-// PRINT ((LIST.LENGTH testList))
-LIST.INSERT testList 2 50
-// PRINT ((LIST.LENGTH testList))
-PRINT testList
+// SET test [1, 2, 3]
+// PRINT ["Weapons", ["Weapon 2", ["nested further"], "Weapon 3"], 4]
+
+IF 1 == 1 < 2 < 1 THEN PRINT "Hello world!"
+
+
+// SET test ("This is a " + "expression")
+// ENTRY.GLOBAL heh 2
+// NODE HI
+// GOTO SCENE end
+// LIST.GET [2, 3, 4, 5] (1 + 2)
+// SET test (123123123)
+// INPUT test
+// NODE end
+// IF 1 == (1) > (2 + 3) THEN SET test 2
+// PRINT 1
+// SET testList [1, 20,3 ]
+// LIST.SET testList 2 3
+// PRINT testList
+// LIST.INSERT testList 2 50
+// PRINT testList
+
+
 // IF (LIST.GET testList 2) == "string" THEN PRINT "hi"
+// PRINT (LIST.GET testList (1 + 0))
+// PRINT ((LIST.LENGTH testList))
+// PRINT ((LIST.LENGTH testList))
 
 
 
