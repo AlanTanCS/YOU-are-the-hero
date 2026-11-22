@@ -9,7 +9,7 @@ def parse_primative(
     if token.type == Types.VARIABLE:
         return Identifier(token.value)
     if token.type == Types.INTEGER:
-        return Integer(token.value)
+        return Integer(int(token.value))
     if token.type == Types.STRING:
         return String(token.value)
     raise RuntimeError(

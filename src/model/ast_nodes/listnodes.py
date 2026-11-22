@@ -29,21 +29,21 @@ class ListGet(ASTNode):
 
 @dataclass
 class ListSet(ASTNode):
-    identifier: Identifier | ListLiteral
+    target: Identifier | ListLiteral
     index: ListIndex
-    value: Value
+    source: Value
 
 
 @dataclass
 class ListInsert(ASTNode):
-    identifier: Identifier | ListLiteral
+    target: Identifier | ListLiteral
     index: ListIndex
-    value: Value
+    source: Value
 
 
 @dataclass
 class ListRemove(ASTNode):
-    identifier: Identifier | ListLiteral
+    target: Identifier | ListLiteral
     index: ListIndex
 
 

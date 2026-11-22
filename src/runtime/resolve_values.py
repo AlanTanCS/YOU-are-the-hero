@@ -84,11 +84,8 @@ def handle_mod(
 def handle_equals(
     left: ASTNode, right: ASTNode, exception_context: ExceptionContext
 ) -> bool:
-    if isinstance(left, Integer) and isinstance(right, Integer):
-        return int(left.value) == int(right.value)
-    if isinstance(left, String) and isinstance(right, String):
-        return left.value == right.value
-
+    if isinstance(left, (String, Integer)) and isinstance(right, (String, Integer)):
+        return str(left.value) == str(right.value)
     return False
 
 

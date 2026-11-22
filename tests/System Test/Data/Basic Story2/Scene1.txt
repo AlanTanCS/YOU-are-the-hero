@@ -1,7 +1,6 @@
-// SET test [1, 2, 3]
-// PRINT ["Weapons", ["Weapon 2", ["nested further"], "Weapon 3"], 4]
-
-IF 1 == 1 < 2 < 1 THEN PRINT "Hello world!"
+NODE setup
+INPUT choice
+IF choice == 1 THEN GOTO NODE setup
 
 
 // SET test ("This is a " + "expression")

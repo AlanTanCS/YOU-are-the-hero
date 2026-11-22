@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 
 from exceptions import ExceptionContext
-from model.ast_nodes import ASTNode, SceneFile
+from model.ast_nodes.entry import EntryStatement
+from model.ast_nodes.listnodes import ListStatement
+from model.ast_nodes.scene import SceneStatement
 from model.context import StatementExecutionContext, StatementSemanticContext
 from model.story import SceneInfo, Story
 from model.syntax import Namespace
@@ -25,12 +27,14 @@ class StoryEngine:
     def set_line(self, new_line):
         self.statement_number = new_line
 
-    def handle_statement(self, statement: ASTNode) -> int | str | None:
+    def handle_statement(
+        self, statement: EntryStatement | SceneStatement | ListStatement
+    ) -> int | str | None:
         if statement.file is None:
             raise RuntimeError("Internal error: Statement has no associated file")
         exception_context = ExceptionContext(statement.file, statement.line_number)
         execution_context = StatementExecutionContext(
-            exception_context, self.story, statement, handle
+            exception_context, self.story, statement.statement, handle
         )
         return handle(execution_context)
 
@@ -90,11 +94,6 @@ class StoryEngine:
         initial_scene = self.story.get_scene(0)
         self.set_scene(initial_scene)
         self.run_scene()
-
-        # # execute scene and then move onto next
-        # while True:
-        #     if self.run_scene() == -1:
-        #         break
 
     def validate_story(self) -> None:
         """Parses all scenes declared in entry and caches the AST, and symbol tables"""

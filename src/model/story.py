@@ -2,13 +2,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from model.ast_nodes import ASTNode, StoryNode
-from model.story_token import Token
+from model.ast_nodes.entry import EntryStatement
+from model.ast_nodes.listnodes import ListStatement
+from model.ast_nodes.scene import SceneStatement
 
 
 @dataclass
 class SceneInfo:
     scene_name: str
-    statements: Sequence[ASTNode]
+    statements: Sequence[EntryStatement | ListStatement | SceneStatement]
     node_table: dict[str, int]
     variable_table: dict[str, ASTNode] = field(default_factory=dict)
 

@@ -35,7 +35,6 @@ def handle_entry_keyword(
     context: StatementExecutionContext,
 ) -> None:
 
-    cast(StatementExecutionContext[EntryAction], context)
-    # remove the outer EntryStatement and EntryAction
-    context.statement = context.statement.statement.action
-    return keyword_table[type(context.statement)](context)
+    # Remove the outer EntryAction
+    context.statement = context.statement.action
+    keyword_table[type(context.statement)](context)

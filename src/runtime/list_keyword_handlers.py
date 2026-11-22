@@ -1,135 +1,104 @@
 from collections.abc import Callable
-from copy import deepcopy
 
-from exceptions.reference_exception import IndexOutOfBoundsException
+from model.ast_nodes import ASTNode
+from model.ast_nodes.collections import ListLiteral
+from model.ast_nodes.listnodes import (
+    ListGet,
+    ListInsert,
+    ListLength,
+    ListRemove,
+    ListSet,
+)
+from model.ast_nodes.primatives import Identifier, Integer
 from model.context import StatementExecutionContext
-from model.story_token import Token
-from model.syntax import ListKeywords
-from model.value_types import Types
-from runtime.operator_handlers import resolve_expression, resolve_value
+from runtime.resolve_values import resolve_value
 
 
-def get_raw_list(context: StatementExecutionContext):
-    target = context.line[0]
-    returned_list: list[Token] = []
-    if target.type == Types.VARIABLE:
-        returned_list = resolve_value(
-            [target],
-            context.variable_table,
-            context.exception_context,
-            context,
-        )
-    elif target.type == Types.LIST_START:
-        returned_list = context.line[:-1]
-    else:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-list or non-variable at this point."
-        )
-
-    return returned_list
+def handle_get(context: StatementExecutionContext) -> None:
+    # TODO fix bug regarding parsing
+    pass
 
 
-def handle_get(context: StatementExecutionContext):
-    raw_list = get_raw_list(context)
+def handle_set(context: StatementExecutionContext) -> None:
+    assert context.story.scene_info, "Internal Error: No scene info"
+    # Merge local and global varaibles to resolve values
+    variables = context.story.scene_info.variable_table | context.story.global_variables
+    target = context.statement.target
+    source = context.statement.source.value
+    index = resolve_value(
+        context.statement.index.index, variables, context.exception_context
+    )
 
-    index = context.line[1]
-    if index.type == Types.EXPRESSION_START:
-        index = resolve_expression(
-            context.line[1:], context.variable_table, context.exception_context, context
-        )
+    if isinstance(target, Identifier):
+        target = resolve_value(target, variables, context.exception_context)
 
-    if index.type != Types.INTEGER:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-integer at this point."
-        )
-    if int(index.value) > len(raw_list) - 3:
-        raise IndexOutOfBoundsException(
-            context.exception_context, int(index.value), len(raw_list) - 2
-        )
-    return raw_list[int(index.value) + 1]
+    assert isinstance(target, ListLiteral), (
+        "Internal Error: We should not have a non list literal"
+    )
+    assert isinstance(index, Integer), "Internal Error: We should have an integer"
 
-
-def handle_set(context: StatementExecutionContext):
-    target = context.line[0]
-    index = context.line[-2]
-    new_value = context.line[-1]
-    raw_list = get_raw_list(context)
-    if target.type != Types.VARIABLE:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-variable at this point."
-        )
-    if index.type != Types.INTEGER:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-integer at this point."
-        )
-    if int(index.value) > len(raw_list) - 3:
-        raise IndexOutOfBoundsException(
-            context.exception_context, int(index.value), len(raw_list) - 2
-        )
-
-    raw_list[int(index.value) + 1] = new_value
+    target.list[index.value] = source
 
 
-def handle_insert(context: StatementExecutionContext):
-    target = context.line[0]
-    index = context.line[-2]
-    new_value = context.line[-1]
-    raw_list = get_raw_list(context)
-    if target.type != Types.VARIABLE:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-variable at this point."
-        )
-    if index.type != Types.INTEGER:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-integer at this point."
-        )
-    if int(index.value) > len(raw_list) - 2:
-        raise IndexOutOfBoundsException(
-            context.exception_context, int(index.value), len(raw_list) - 2
-        )
+def handle_insert(context: StatementExecutionContext) -> None:
+    assert context.story.scene_info, "Internal Error: No scene info"
+    # Merge local and global varaibles to resolve values
+    variables = context.story.scene_info.variable_table | context.story.global_variables
+    target = context.statement.target
+    source = context.statement.source.value
+    index = resolve_value(
+        context.statement.index.index, variables, context.exception_context
+    )
 
-    raw_list.insert(int(index.value) + 1, new_value)
+    if isinstance(target, Identifier):
+        target = resolve_value(target, variables, context.exception_context)
 
+    assert isinstance(target, ListLiteral), (
+        "Internal Error: We should not have a non list literal"
+    )
+    assert isinstance(index, Integer), "Internal Error: We should have an integer"
 
-def handle_remove(context: StatementExecutionContext):
-    target = context.line[0]
-    index = context.line[1]
-    raw_list = get_raw_list(context)
-    if target.type != Types.VARIABLE:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-variable at this point."
-        )
-    if index.type != Types.INTEGER:
-        raise RuntimeError(
-            "Internal error: We should not have parsed a non-integer at this point."
-        )
-    if int(index.value) > len(raw_list) - 2:
-        raise IndexOutOfBoundsException(
-            context.exception_context, int(index.value), len(raw_list) - 2
-        )
-
-    raw_list.pop(int(index.value) + 1)
+    target.list.insert(index.value, source)
 
 
-def handle_length(context: StatementExecutionContext):
-    return Token(Types.INTEGER, len(get_raw_list(context)) - 2)
+def handle_remove(context: StatementExecutionContext) -> None:
+    assert context.story.scene_info, "Internal Error: No scene info"
+    # Merge local and global varaibles to resolve values
+    variables = context.story.scene_info.variable_table | context.story.global_variables
+    target = context.statement.target
+    index = resolve_value(
+        context.statement.index.index, variables, context.exception_context
+    )
+
+    if isinstance(target, Identifier):
+        target = resolve_value(target, variables, context.exception_context)
+
+    assert isinstance(target, ListLiteral), (
+        "Internal Error: We should not have a non list literal"
+    )
+    assert isinstance(index, Integer), "Internal Error: We should have an integer"
+
+    target.list.pop(index.value)
 
 
-keyword_table: dict[
-    ListKeywords, Callable[[StatementExecutionContext], None | int | str | Token]
-] = {
-    ListKeywords.GET: handle_get,
-    ListKeywords.SET: handle_set,
-    ListKeywords.INSERT: handle_insert,
-    ListKeywords.REMOVE: handle_remove,
-    ListKeywords.LENGTH: handle_length,
+def handle_length(context: StatementExecutionContext) -> None:
+    # TODO fix bug regarding parsing
+    pass
+
+
+keyword_table: dict[type[(ASTNode)], Callable[[StatementExecutionContext], None]] = {
+    ListGet: handle_get,
+    ListSet: handle_set,
+    ListInsert: handle_insert,
+    ListRemove: handle_remove,
+    ListLength: handle_length,
 }
 
 
-# Node is a special keyword and is handled in the parser when populating the table
-def handle_keyword(context: StatementExecutionContext) -> None | int | str | Token:
-    keyword = context.keyword.value
-    removed_keyword = context.line[1:]
+def handle_list_keyword(
+    context: StatementExecutionContext,
+) -> None:
 
-    context.line = removed_keyword
-    return keyword_table[keyword](context)
+    # Remove the outer ListStatement
+    context.statement = context.statement.statement
+    keyword_table[type(context.statement)](context)

@@ -9,10 +9,7 @@ from model.ast_nodes.scene import (
     GotoStatement,
     GotoType,
     InputStatement,
-    NodeDeclaration,
     PrintStatement,
-    SceneAction,
-    SceneStatement,
     SetStatement,
 )
 from model.context import StatementExecutionContext
@@ -63,8 +60,8 @@ def handle_conditional(context: StatementExecutionContext) -> None | int | str:
             # Condition failed
             return
 
-    context.statement = SceneStatement(context.statement.action)
-    context.dispatch(context)
+    context.statement = context.statement.action
+    return context.dispatch(context)
 
 
 def handle_goto(context: StatementExecutionContext) -> int | str:
@@ -112,13 +109,10 @@ keyword_table: dict[
 }
 
 
-# Node is a special keyword and is handled in semantic analysis when populating the table
 def handle_scene_keyword(
     context: StatementExecutionContext,
 ) -> None | int | str:
-    if isinstance(context.statement.statement, NodeDeclaration):
-        return
-    cast(StatementExecutionContext[SceneAction], context)
-    # Remove the outer EntryStatement and EntryAction
-    context.statement = context.statement.statement.action
+
+    # Remove the outer SceneAction
+    context.statement = context.statement.action
     return keyword_table[type(context.statement)](context)

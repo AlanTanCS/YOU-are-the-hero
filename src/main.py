@@ -56,13 +56,6 @@ def main() -> None:
     )
     story_engine = StoryEngine(story)
     story_engine.run()
-    # story_engine.run_entry()
-
-    # set_line_and_scene(story_engine, 0, 3)
-    # print(story_engine.story.get_active_scene())
-    # story_engine.step()
-    # print(story_engine.get_current_line())
-    # story_engine.run()
 
 
 if __name__ == "__main__":
